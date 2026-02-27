@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Hero - H5重心微调版</title>
+    <style>
+        :root {
+            --primary-color: #4facfe;
+            --secondary-color: #00f2fe;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
+        body, html { 
+            margin: 0; padding: 0; 
+            font-family: 'PingFang SC', 'Helvetica Neue', sans-serif; 
+            background: #0a0a0a; color: white; 
+            overflow: hidden; touch-action: manipulation;
+        }
+
+        /* 弹幕层 */
+        #barrage-container {
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1; pointer-events: none;
+        }
+
+        .barrage-item {
+            position: absolute; white-space: nowrap; font-weight: 800;
+            will-change: transform; z-index: 1;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.2), 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* 3D 渲染容器 */
+        #canvas-container {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; 
+            z-index: 10; pointer-events: none; 
+        }
+
+        /* Hero 内容区 */
+        .hero {
+            display: flex; align-items: center; justify-content: center; 
+            height: 100vh; width: 100vw;
+            position: relative; z-index: 100; pointer-events: none;
+        }
+
+        .hero-content {
+            /* PC 默认布局 */
+            transform: translateX(calc(-15% - 200px)); 
+            max-width: 500px; padding: 40px; border-radius: 32px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+            animation: borderGlow 4s infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            from { border-color: rgba(79, 172, 254, 0.1); }
+            to { border-color: rgba(0, 242, 254, 0.4); }
+        }
+
+        .hero-content h1 {
+            font-size: 4.5rem; margin: 0 0 10px 0; letter-spacing: -2px;
+            background: linear-gradient(90deg, #fff, var(--primary-color), var(--secondary-color), #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+        }
+
+        @keyframes shine { to { background-position: 200% center; } }
+
+        .hero-content p {
+            font-size: 1.2rem; line-height: 1.6; color: rgba(255,255,255,0.85);
+            margin-bottom: 25px; font-weight: 500;
+        }
+
+        .barrage-control {
+            display: flex; gap: 10px; background: rgba(0,0,0,0.5);
+            padding: 6px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        #barrage-input {
+            flex: 1; border: none; background: transparent;
+            color: white; padding-left: 12px; outline: none; font-size: 1rem; width: 100px;
+        }
+
+        #send-btn {
+            padding: 10px 20px; border-radius: 30px; border: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; cursor: pointer; font-weight: bold;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .hero-content {
+                transform: translateX(0) translateY(200px); 
+                width: 85%;
+                padding: 25px;
+                max-width: none;
+            }
+            .hero-content h1 { font-size: 2.5rem; text-align: center; }
+            .hero-content p { font-size: 1rem; text-align: center; }
+        }
+
+        @keyframes moveBarrage {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-220%); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="barrage-container"></div>
+    <div id="canvas-container"></div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>我叫ZL9</h1>
+            <p>用最不堪的语言攻击我最薄弱的地方！</p>
+            <div class="barrage-control">
+                <input type="text" id="barrage-input" placeholder="输入攻击弹幕..." maxlength="15">
+                <button id="send-btn">发送</button>
+            </div>
+        </div>
+    </section>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, model;
+        let mouseX = 0, mouseY = 0;
+        
+        const getIsMobile = () => window.innerWidth <= 768;
+
+        init3D();
+
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+            const pLight = new THREE.PointLight(0x4facfe, 20, 10);
+            pLight.position.set(2, 2, 2);
+            scene.add(pLight);
+
+            const loader = new GLTFLoader();
+            loader.load('./models/092187c58cb33a5723b3719eece5c5c2.glb', (gltf) => {
+                model = gltf.scene;
+                updateModelLayout();
+                scene.add(model);
+                animate();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!getIsMobile()) {
+                    mouseX = (e.clientX - window.innerWidth / 2) / 100;
+                    mouseY = (e.clientY - window.innerHeight / 2) / 100;
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                updateModelLayout();
+            });
+        }
+
+        function updateModelLayout() {
+            if (!model) return;
+            if (getIsMobile()) {
+                model.scale.set(1.6, 1.6, 1.6);
+                // 核心修改：从 -0.9 向上回调 1 个单位，变为 0.1
+                // 这样模型重心刚好在屏幕中心稍偏上一点点
+                model.position.set(0, 0.1, 0); 
+            } else {
+                model.scale.set(2.2, 2.2, 2.2); 
+                model.position.set(0.8, -0.3, 0); 
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (model) {
+                model.rotation.y += 0.005;
+                model.rotation.x += (mouseY * 0.1 - model.rotation.x) * 0.05;
+                model.rotation.z += (mouseX * 0.1 - model.rotation.z) * 0.05;
+            }
+            renderer.render(scene, camera);
+        }
+
+        // --- 弹幕逻辑 ---
+        const bContainer = document.getElementById('barrage-container');
+        const input = document.getElementById('barrage-input');
+        const btn = document.getElementById('send-btn');
+        const STORAGE_KEY = 'axing_final_v6';
+        let barragePool = JSON.parse(localStorage.getItem(STORAGE_KEY) || '["不够不堪！", "三鲜伊面天下第一", "细节拉满了", "阿性你真行"]');
+
+        function createBarrage(text) {
+            const isMobile = getIsMobile();
+            const b = document.createElement('div');
+            b.className = 'barrage-item';
+            b.innerText = text;
+            const size = (Math.random() * (isMobile ? 0.8 : 1.5) + (isMobile ? 0.7 : 1.0)).toFixed(1);
+            b.style.fontSize = size + 'rem';
+            const baseOpacity = (size / 4) + 0.2; 
+            const colors = [`rgba(255,255,255,${baseOpacity})`, `rgba(79,172,254,${baseOpacity+0.1})`, `rgba(0,242,254,${baseOpacity+0.1})` ];
+            b.style.color = colors[Math.floor(Math.random() * colors.length)];
+            b.style.top = Math.random() * 90 + 5 + 'vh';
+            b.style.animation = `moveBarrage ${Math.random() * 5 + (isMobile ? 6 : 10)}s linear forwards`;
+            bContainer.appendChild(b);
+            b.addEventListener('animationend', () => b.remove());
+        }
+
+        function startLoop() {
+            setInterval(() => {
+                if (barragePool.length) createBarrage(barragePool[Math.floor(Math.random()*barragePool.length)]);
+            }, getIsMobile() ? 1200 : 1800);
+        }
+
+        function handleSend() {
+            const t = input.value.trim();
+            if (t) {
+                createBarrage(t);
+                if (!barragePool.includes(t)) {
+                    barragePool.push(t);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(barragePool));
+                }
+                input.value = '';
+            }
+        }
+
+        btn.addEventListener('click', handleSend);
+        input.addEventListener('keypress', (e) => e.key === 'Enter' && handleSend());
+        startLoop();
+    </script>
+</body>
+</html>
