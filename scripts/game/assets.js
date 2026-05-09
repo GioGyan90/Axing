@@ -99,29 +99,36 @@ function addGoal(world, materials) {
     net.position.set(0, 1.16, FIELD.goalZ - 0.22);
     frame.add(net);
     
-    // Add support braces (right-angled trapezoid shape from side view)
-    const braceGeo = new THREE.BufferGeometry();
-    const braceVertices = new Float32Array([
-        // Left brace (behind left post)
-        -2.65, 0, FIELD.goalZ + 0.08,  // bottom front
-        -2.65, 1.2, FIELD.goalZ + 0.08, // top front
-        -2.65, 0, FIELD.goalZ + 1.2,    // bottom back
-        -2.65, 0.3, FIELD.goalZ + 1.2,  // top back
-        // Right brace (behind right post)
-        2.65, 0, FIELD.goalZ + 0.08,    // bottom front
-        2.65, 1.2, FIELD.goalZ + 0.08,  // top front
-        2.65, 0, FIELD.goalZ + 1.2,     // bottom back
-        2.65, 0.3, FIELD.goalZ + 1.2,   // top back
-    ]);
-    braceGeo.setAttribute('position', new THREE.BufferAttribute(braceVertices, 3));
-    const braceIndices = new Uint16Array([
-        0, 1, 2, 2, 1, 3,  // left brace
-        4, 5, 6, 6, 5, 7,  // right brace
-    ]);
-    braceGeo.setIndex(new THREE.BufferAttribute(braceIndices, 1));
-    const braceMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide });
-    const braces = new THREE.Mesh(braceGeo, braceMaterial);
-    frame.add(braces);
+    // Add support braces (right-angled trapezoid prism shape from side view, same material as goal frame)
+    // Left brace behind left post
+    const leftBraceShape = new THREE.Shape();
+    leftBraceShape.moveTo(0, 0);
+    leftBraceShape.lineTo(0, 1.2);
+    leftBraceShape.lineTo(1.2, 0.3);
+    leftBraceShape.lineTo(1.2, 0);
+    leftBraceShape.lineTo(0, 0);
+    const leftBraceExtrudeSettings = { depth: 0.16, bevelEnabled: false };
+    const leftBraceGeo = new THREE.ExtrudeGeometry(leftBraceShape, leftBraceExtrudeSettings);
+    const leftBrace = new THREE.Mesh(leftBraceGeo, materials.goal);
+    leftBrace.position.set(-2.65 - 0.08, 0, FIELD.goalZ + 0.08);
+    leftBrace.rotation.y = Math.PI / 2;
+    leftBrace.castShadow = true;
+    frame.add(leftBrace);
+    
+    // Right brace behind right post
+    const rightBraceShape = new THREE.Shape();
+    rightBraceShape.moveTo(0, 0);
+    rightBraceShape.lineTo(0, 1.2);
+    rightBraceShape.lineTo(1.2, 0.3);
+    rightBraceShape.lineTo(1.2, 0);
+    rightBraceShape.lineTo(0, 0);
+    const rightBraceExtrudeSettings = { depth: 0.16, bevelEnabled: false };
+    const rightBraceGeo = new THREE.ExtrudeGeometry(rightBraceShape, rightBraceExtrudeSettings);
+    const rightBrace = new THREE.Mesh(rightBraceGeo, materials.goal);
+    rightBrace.position.set(2.65 + 0.08, 0, FIELD.goalZ + 0.08);
+    rightBrace.rotation.y = -Math.PI / 2;
+    rightBrace.castShadow = true;
+    frame.add(rightBrace);
     
     leftPost.userData.isGoalPost = true;
     rightPost.userData.isGoalPost = true;
