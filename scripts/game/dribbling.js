@@ -1,96 +1,76 @@
 import * as THREE from 'three';
 import { BALL_GROUND_Y } from './config.js';
-import { horizontalSpeed, flatDistance } from './rules.js';
+
+const DRIBBLE_CAPTURE_RADIUS = 0.9;
+const DRIBBLE_RETOUCH_RESET_RADIUS = 1.05;
+const DRIBBLE_FOOT_DISTANCE = 0.48;
+const DRIBBLE_FOOT_SIDE_OFFSET = 0.14;
 
 /**
- * 更新球员带球逻辑
- * 当球员靠近球且球速较慢时，进入带球状态
- * 带球时通过弹簧 - 阻尼系统让球自然跟随
- * 小幅度移动时球能跟上，大幅度快速横移时球因惯性拉脱
+ * 更新球员带球逻辑。
+ *
+ * 带球时将足球锁在当前面向的脚下位置，避免跑动动画中球被惯性拉远；
+ * 双击后方向键会临时解除带球锁定，玩家离开球后需要再次触球才能重新进入带球状态。
  */
 export function updateDribbling({ dt, state, keys, player, ball, getAimDirection, elapsedTime }) {
     const distanceToBall = flatDistance(player.position, ball.position);
-    const isControllingBall = distanceToBall < 0.9 && ball.position.y <= BALL_GROUND_Y + 0.08 && horizontalSpeed(state.ballVelocity) < 3.8;
-    
-    if (!isControllingBall) return false;
-    
-    const aimDirection = getAimDirection();
-    if (keys.has('KeyW') || keys.has('KeyS') || keys.has('KeyA') || keys.has('KeyD') ||
-        keys.has('ArrowUp') || keys.has('ArrowDown') || keys.has('ArrowLeft') || keys.has('ArrowRight')) {
-        // 有移动输入时使用移动方向
-    } else if (state.isChargingKick) {
-        // 蓄力时使用瞄准方向
-        player.userData.facing.copy(aimDirection);
-        player.rotation.y = Math.atan2(aimDirection.x, aimDirection.z);
+
+    if (state.dribbleNeedsRetouch && distanceToBall > DRIBBLE_RETOUCH_RESET_RADIUS) {
+        state.dribbleNeedsRetouch = false;
     }
-    
-    // 计算带球方向
+
+    if (elapsedTime < state.dribbleBreakUntil || state.dribbleNeedsRetouch) {
+        state.isDribbling = false;
+        return false;
+    }
+
+    const isControllingBall = distanceToBall < DRIBBLE_CAPTURE_RADIUS
+        && ball.position.y <= BALL_GROUND_Y + 0.08
+        && horizontalSpeed(state.ballVelocity) < 3.8;
+
+    if (!isControllingBall) {
+        state.isDribbling = false;
+        return false;
+    }
+
     const move = new THREE.Vector3(
         (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0),
         0,
         (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0)
     );
-    
+
+    const aimDirection = getAimDirection();
     const dribbleDirection = move.lengthSq() > 0 ? player.userData.facing.clone() : aimDirection;
-    
-    // 计算理想的目标球位置：基于当前球相对位置，但限制在球员前方扇形区域内
-    const ballOffset = ball.position.clone().sub(player.position);
-    ballOffset.y = 0;
-    const distToPlayer = ballOffset.length();
-    
-    // 理想距离：球应该保持在球员前方 0.45-0.65 单位处
-    const idealDist = 0.55;
-    let targetBallPos;
-    
-    if (distToPlayer > 0.01) {
-        // 计算球相对于球员朝向的角度
-        const forward = dribbleDirection.clone();
-        const angleToForward = forward.angleTo(ballOffset.clone().normalize());
-        
-        // 如果球在身后或侧面太远，将其拉回前方
-        const maxAngle = THREE.MathUtils.degToRad(70); // 允许的最大角度
-        
-        // 计算目标方向：在球员朝向前方 clampedAngle 范围内
-        const targetDir = ballOffset.clone().normalize();
-        if (angleToForward > maxAngle) {
-            // 球在太侧面的位置，将其投影到最大角度方向
-            const projection = forward.clone().multiplyScalar(Math.cos(maxAngle));
-            const sideDir = ballOffset.clone().normalize().sub(forward.clone().multiplyScalar(Math.cos(angleToForward))).normalize();
-            targetDir.copy(projection.addScaledVector(sideDir, Math.sin(maxAngle))).normalize();
-        }
-        
-        targetBallPos = player.position.clone().add(targetDir.multiplyScalar(idealDist));
-    } else {
-        // 球就在脚下，放在正前方
-        targetBallPos = player.position.clone().add(dribbleDirection.clone().multiplyScalar(idealDist));
+    dribbleDirection.y = 0;
+    if (dribbleDirection.lengthSq() < 0.001) dribbleDirection.set(0, 0, -1);
+    dribbleDirection.normalize();
+
+    if (move.lengthSq() === 0 || state.isChargingKick) {
+        player.userData.facing.copy(dribbleDirection);
+        player.rotation.y = Math.atan2(dribbleDirection.x, dribbleDirection.z);
     }
-    
-    // 计算将球拉向理想位置所需的加速度
-    const toTarget = targetBallPos.clone().sub(ball.position);
-    toTarget.y = 0;
-    const distanceToTarget = toTarget.length();
-    
-    // 弹簧力系数和阻尼
-    const springConstant = 22.0;
-    const dampingFactor = 7.5;
-    
-    // 计算弹簧力产生的加速度
-    let acceleration = toTarget.normalize().multiplyScalar(distanceToTarget * springConstant);
-    
-    // 添加阻尼（抵抗球的当前速度）
-    const ballHorizontalVel = new THREE.Vector3(state.ballVelocity.x, 0, state.ballVelocity.z);
-    const dampingForce = ballHorizontalVel.multiplyScalar(-dampingFactor);
-    acceleration.add(dampingForce);
-    
-    // 限制最大加速度，实现拉脱效果
-    const maxAcceleration = 18.0;
-    if (acceleration.length() > maxAcceleration) {
-        acceleration.normalize().multiplyScalar(maxAcceleration);
-    }
-    
-    // 应用加速度到球的速度
-    state.ballVelocity.x += acceleration.x * dt;
-    state.ballVelocity.z += acceleration.z * dt;
-    
+
+    const sideDirection = new THREE.Vector3(dribbleDirection.z, 0, -dribbleDirection.x).normalize();
+    const stepPhase = Math.sin(elapsedTime * 12.5);
+    const footSide = sideDirection.multiplyScalar(DRIBBLE_FOOT_SIDE_OFFSET * stepPhase);
+    const footForward = dribbleDirection.clone().multiplyScalar(DRIBBLE_FOOT_DISTANCE);
+    const targetBallPos = player.position.clone().add(footForward).add(footSide);
+    targetBallPos.y = BALL_GROUND_Y;
+
+    ball.position.copy(targetBallPos);
+    state.ballVelocity.set(0, 0, 0);
+    ball.rotation.x += player.userData.velocity.z * dt * 2.4;
+    ball.rotation.z -= player.userData.velocity.x * dt * 2.4;
+    state.isDribbling = true;
     return true;
+}
+
+function horizontalSpeed(velocity) {
+    return Math.hypot(velocity.x, velocity.z);
+}
+
+function flatDistance(a, b) {
+    const dx = a.x - b.x;
+    const dz = a.z - b.z;
+    return Math.hypot(dx, dz);
 }

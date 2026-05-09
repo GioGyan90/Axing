@@ -124,12 +124,22 @@ function stopConfetti(canvas) {
     delete canvas.dataset.confettiTimer;
 }
 
-export function bindKeyboard({ keys, onKickStart, onKickRelease }) {
+export function bindKeyboard({ keys, onKickStart, onKickRelease, onBackDoubleTap }) {
+    let lastBackTapAt = 0;
     window.addEventListener('keydown', (event) => {
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
         if (event.code === 'Space') {
             if (!event.repeat) onKickStart();
             return;
+        }
+        if ((event.code === 'ArrowDown' || event.code === 'KeyS') && !event.repeat) {
+            const now = performance.now();
+            if (now - lastBackTapAt <= 320) {
+                onBackDoubleTap?.();
+                lastBackTapAt = 0;
+            } else {
+                lastBackTapAt = now;
+            }
         }
         keys.add(event.code);
     });
@@ -142,7 +152,8 @@ export function bindKeyboard({ keys, onKickStart, onKickRelease }) {
     });
 }
 
-export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCancel }) {
+export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCancel, onBackDoubleTap }) {
+    let lastBackTapAt = 0;
     document.querySelectorAll('[data-key]').forEach((button) => {
         const key = button.dataset.key;
         button.addEventListener('pointerdown', (event) => {
@@ -150,6 +161,15 @@ export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCanc
             if (key === 'Space') {
                 onKickStart();
                 return;
+            }
+            if (key === 'ArrowDown' || key === 'KeyS') {
+                const now = performance.now();
+                if (now - lastBackTapAt <= 320) {
+                    onBackDoubleTap?.();
+                    lastBackTapAt = 0;
+                } else {
+                    lastBackTapAt = now;
+                }
             }
             keys.add(key);
         });

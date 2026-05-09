@@ -15,6 +15,7 @@ import {
 } from './assets.js';
 import { ensureAudioContext, playKeeperHitSound, playSixteenBitApplause } from './audio.js';
 import {
+    breakDribble,
     cancelKickCharge,
     checkGoal,
     createGameState,
@@ -134,8 +135,19 @@ const kickStart = () => {
     startKickCharge(state, clock.elapsedTime);
 };
 
-bindKeyboard({ keys, onKickStart: kickStart, onKickRelease: kickRelease });
-bindTouchControls({ keys, onKickStart: kickStart, onKickRelease: kickRelease, onKickCancel: () => cancelKickCharge(state) });
+bindKeyboard({
+    keys,
+    onKickStart: kickStart,
+    onKickRelease: kickRelease,
+    onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
+});
+bindTouchControls({
+    keys,
+    onKickStart: kickStart,
+    onKickRelease: kickRelease,
+    onKickCancel: () => cancelKickCharge(state),
+    onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
+});
 bindKeeperLevel(elements.keeperLevelSelect, (level) => {
     state.keeperLevel = level;
     notify(`门将 AI 等级 ${state.keeperLevel}`);
