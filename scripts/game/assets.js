@@ -627,24 +627,24 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         const punchPhase = Math.sin(punch * Math.PI);
         
         // Body jumps up and extends
-        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.25 * punchPhase;
-        pose.visualRoot.rotation.z = 0.15 * punchPhase;  // Slight body tilt
-        pose.visualRoot.rotation.x = -0.2 * punchPhase;
+        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.35 * punchPhase;
+        pose.visualRoot.rotation.z = 0.1 * punchPhase;  // Slight body tilt
+        pose.visualRoot.rotation.x = -0.15 * punchPhase;
         
-        pose.body.position.y = bodyY + 0.15 * punchPhase;
-        pose.body.rotation.set(-0.15 * punchPhase, 0, 0.3 * punchPhase);
+        pose.body.position.y = bodyY + 0.2 * punchPhase;
+        pose.body.rotation.set(-0.1 * punchPhase, 0, 0.2 * punchPhase);
         
         // Head looks up at the ball
-        pose.head.position.y = headY + 0.1 * punchPhase;
-        pose.head.rotation.set(-0.3 * punchPhase, 0, 0.15 * punchPhase);
+        pose.head.position.y = headY + 0.12 * punchPhase;
+        pose.head.rotation.set(-0.4 * punchPhase, 0, 0.1 * punchPhase);
         
         // Right arm raised high with fist (punching motion), left arm balanced
-        setArmPose(pose.leftArm, 1.8 * punchPhase, 0.25, 1.4 * punchPhase);  // Left arm up for balance
-        setArmPose(pose.rightArm, -2.3 * punchPhase, 0.15, -1.8 * punchPhase);  // Right arm punching up
+        setArmPose(pose.leftArm, 2.0 * punchPhase, 0.3, 1.6 * punchPhase);  // Left arm up for balance
+        setArmPose(pose.rightArm, -3.0 * punchPhase, 0.2, -2.8 * punchPhase);  // Right arm punching fully overhead
         
         // Legs: one leg bent, one extended for jump power
-        setLegPose(pose.leftLeg, -0.8 * punchPhase, 1.1 * punchPhase, -0.3 * punchPhase);
-        setLegPose(pose.rightLeg, -0.6 * punchPhase, 0.9 * punchPhase, 0.3 * punchPhase);
+        setLegPose(pose.leftLeg, -0.9 * punchPhase, 1.2 * punchPhase, -0.4 * punchPhase);
+        setLegPose(pose.rightLeg, -0.7 * punchPhase, 1.0 * punchPhase, 0.4 * punchPhase);
         
         updatePlayerNameTagFlash(pose, elapsedTime, punchPhase);
         return;
