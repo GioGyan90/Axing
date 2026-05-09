@@ -99,6 +99,30 @@ function addGoal(world, materials) {
     net.position.set(0, 1.16, FIELD.goalZ - 0.22);
     frame.add(net);
     
+    // Add support braces (right-angled trapezoid shape from side view)
+    const braceGeo = new THREE.BufferGeometry();
+    const braceVertices = new Float32Array([
+        // Left brace (behind left post)
+        -2.65, 0, FIELD.goalZ + 0.08,  // bottom front
+        -2.65, 1.2, FIELD.goalZ + 0.08, // top front
+        -2.65, 0, FIELD.goalZ + 1.2,    // bottom back
+        -2.65, 0.3, FIELD.goalZ + 1.2,  // top back
+        // Right brace (behind right post)
+        2.65, 0, FIELD.goalZ + 0.08,    // bottom front
+        2.65, 1.2, FIELD.goalZ + 0.08,  // top front
+        2.65, 0, FIELD.goalZ + 1.2,     // bottom back
+        2.65, 0.3, FIELD.goalZ + 1.2,   // top back
+    ]);
+    braceGeo.setAttribute('position', new THREE.BufferAttribute(braceVertices, 3));
+    const braceIndices = new Uint16Array([
+        0, 1, 2, 2, 1, 3,  // left brace
+        4, 5, 6, 6, 5, 7,  // right brace
+    ]);
+    braceGeo.setIndex(new THREE.BufferAttribute(braceIndices, 1));
+    const braceMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide });
+    const braces = new THREE.Mesh(braceGeo, braceMaterial);
+    frame.add(braces);
+    
     leftPost.userData.isGoalPost = true;
     rightPost.userData.isGoalPost = true;
     crossbar.userData.isGoalPost = true;
