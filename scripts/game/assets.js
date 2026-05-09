@@ -100,10 +100,11 @@ function addGoal(world, materials) {
     frame.add(net);
     
     // Add support braces (right-angled trapezoid prism shape from side view, same material as goal frame)
-    // Left brace behind left post
+    // The short side of both trapezoids faces away from the field (outward)
+    // Left brace behind left post - short side faces left (outward)
     const leftBraceShape = new THREE.Shape();
     leftBraceShape.moveTo(0, 0);
-    leftBraceShape.lineTo(0, 1.2);
+    leftBraceShape.lineTo(0, 2.4);
     leftBraceShape.lineTo(1.2, 0.3);
     leftBraceShape.lineTo(1.2, 0);
     leftBraceShape.lineTo(0, 0);
@@ -115,12 +116,12 @@ function addGoal(world, materials) {
     leftBrace.castShadow = true;
     frame.add(leftBrace);
     
-    // Right brace behind right post
+    // Right brace behind right post - short side faces right (outward)
     const rightBraceShape = new THREE.Shape();
     rightBraceShape.moveTo(0, 0);
-    rightBraceShape.lineTo(0, 1.2);
-    rightBraceShape.lineTo(1.2, 0.3);
-    rightBraceShape.lineTo(1.2, 0);
+    rightBraceShape.lineTo(0, 2.4);
+    rightBraceShape.lineTo(-1.2, 0.3);
+    rightBraceShape.lineTo(-1.2, 0);
     rightBraceShape.lineTo(0, 0);
     const rightBraceExtrudeSettings = { depth: 0.16, bevelEnabled: false };
     const rightBraceGeo = new THREE.ExtrudeGeometry(rightBraceShape, rightBraceExtrudeSettings);
