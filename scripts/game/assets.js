@@ -122,10 +122,10 @@ function addCrowdBlocks(world) {
 
 const CHARACTER_FOOT_CLEARANCE = 0.325;
 const DEFAULT_PLAYER_USERNAME = 'ZL9';
-const ZL9_HEAD_SIZE = 1.16;
-const ZL9_HEAD_CENTER = new THREE.Vector3(0, 0.03, 0);
+const ZL9_HEAD_SIZE = 1.02;
+const ZL9_HEAD_CENTER = new THREE.Vector3(0, 0.12, 0);
 const ZL9_HEAD_ROTATION = new THREE.Euler(0, -Math.PI / 2, 0);
-const PLAYER_BODY_SCALE = 0.75;
+const PLAYER_BODY_SCALE = 0.88;
 const CHARACTER_BODY_Y = 0.78;
 const CHARACTER_BODY_HEIGHT = 0.42;
 const CHARACTER_HEAD_Y = 1.3;
@@ -146,7 +146,7 @@ export function createCharacter(materials, material, type) {
     const boot = new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.58 });
     const hairMaterial = new THREE.MeshStandardMaterial({ color: type === 'player' ? 0x3b2415 : 0x21140f, roughness: 0.7 });
 
-    const body = createVoxelBody(scaleValue(0.34), scaleValue(CHARACTER_BODY_HEIGHT), material);
+    const body = createVoxelBody(scaleValue(0.34), scaleValue(CHARACTER_BODY_HEIGHT), material, shorts);
     body.position.y = bodyBaseY;
     body.castShadow = true;
 
@@ -343,7 +343,7 @@ function createJerseyBackNumber(number = '9', bodyScale = 1) {
     return numberPlane;
 }
 
-function createVoxelBody(radius, height, material) {
+function createVoxelBody(radius, height, material, lowerBodyMaterial = material) {
     const body = new THREE.Group();
     
     // Torso - main box (upper chest)
@@ -376,30 +376,38 @@ function createVoxelBody(radius, height, material) {
     rightShoulder.castShadow = true;
     body.add(rightShoulder);
     
-    // Abdomen section (between torso and hips)
+    // Abdomen section (between torso and hips).  It extends below the old
+    // waist line so the shirt fills the empty space under the large head.
     const abdomenWidth = torsoWidth * 0.92;
-    const abdomenHeight = height * 0.20;
+    const abdomenHeight = height * 0.42;
     const abdomenDepth = torsoDepth * 0.95;
     const abdomen = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth, abdomenHeight, abdomenDepth), material);
-    abdomen.position.y = height * 0.20;
+    abdomen.position.y = -height * 0.02;
     abdomen.castShadow = true;
     body.add(abdomen);
     
-    // Hips / waist section
-    const hipWidth = torsoWidth * 0.88;
-    const hipHeight = height * 0.16;
-    const hipDepth = torsoDepth * 0.92;
-    const hips = new THREE.Mesh(new THREE.BoxGeometry(hipWidth, hipHeight, hipDepth), material);
-    hips.position.y = height * 0.08;
+    // Hips / waist section, pulled downward to bridge the gap to the legs.
+    const hipWidth = torsoWidth * 0.9;
+    const hipHeight = height * 0.42;
+    const hipDepth = torsoDepth * 0.94;
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(hipWidth, hipHeight, hipDepth), lowerBodyMaterial);
+    hips.position.y = -height * 0.38;
     hips.castShadow = true;
     body.add(hips);
+    // Rear hip/butt block gives the lower body volume from side/back views.
+    const rearHip = new THREE.Mesh(new THREE.BoxGeometry(hipWidth * 0.86, hipHeight * 0.92, hipDepth * 0.44), lowerBodyMaterial);
+    rearHip.position.set(0, -height * 0.4, -hipDepth * 0.36);
+    rearHip.castShadow = true;
+    body.add(rearHip);
+
     
-    // Groin/crotch piece (small connector between legs)
-    const groinWidth = hipWidth * 0.55;
-    const groinHeight = height * 0.10;
-    const groinDepth = hipDepth * 0.75;
-    const groin = new THREE.Mesh(new THREE.BoxGeometry(groinWidth, groinHeight, groinDepth), material);
-    groin.position.y = 0;
+    // Groin/crotch piece (small connector between legs), extended downward so
+    // the pelvis reaches the top of the thighs instead of floating above them.
+    const groinWidth = hipWidth * 0.58;
+    const groinHeight = height * 0.36;
+    const groinDepth = hipDepth * 0.78;
+    const groin = new THREE.Mesh(new THREE.BoxGeometry(groinWidth, groinHeight, groinDepth), lowerBodyMaterial);
+    groin.position.y = -height * 0.68;
     groin.castShadow = true;
     body.add(groin);
     
