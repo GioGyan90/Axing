@@ -644,15 +644,16 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         setArmPose(pose.rightArm, rightArmAngle, 0.15, 0);
         
         // Right forearm bends at elbow to bring fist forward/up during peak
+        // The forearm is the 'knee' joint of the arm limb
         const rightForearmBend = punchPhase > 0.5 ? (punchPhase - 0.5) * 2.5 : 0;
-        pose.rightForearm.rotation.x = rightForearmBend;
+        pose.rightArm.knee.rotation.x = rightForearmBend;
         
         // Left arm: balances by going opposite direction
         const leftArmAngle = 0.2 - punchPhase * 1.8;
         setArmPose(pose.leftArm, leftArmAngle, 0.2, 0);
         
         // Left forearm: slight bend for balance
-        pose.leftForearm.rotation.x = punchPhase * 1.0;
+        pose.leftArm.knee.rotation.x = punchPhase * 1.0;
         
         // Legs: bend knees during jump, extend on landing
         const kneeBend = punchPhase > 0.5 ? (1 - punchPhase) * 1.3 : punchPhase * 1.3;
