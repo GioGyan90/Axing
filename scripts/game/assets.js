@@ -170,8 +170,8 @@ export function createCharacter(materials, material, type) {
 
     limbRefs.leftArm.hip.position.set(scaleValue(-0.34), scaleValue(0.98), 0);
     limbRefs.rightArm.hip.position.set(scaleValue(0.34), scaleValue(0.98), 0);
-    limbRefs.leftLeg.hip.position.set(scaleValue(-0.19), scaleValue(0.46), 0);
-    limbRefs.rightLeg.hip.position.set(scaleValue(0.19), scaleValue(0.46), 0);
+    limbRefs.leftLeg.hip.position.set(scaleValue(-0.19), scaleValue(0.42), 0);
+    limbRefs.rightLeg.hip.position.set(scaleValue(0.19), scaleValue(0.42), 0);
     limbs.add(limbRefs.leftArm.hip, limbRefs.rightArm.hip, limbRefs.leftLeg.hip, limbRefs.rightLeg.hip);
 
     if (type === 'player') {
@@ -378,28 +378,28 @@ function createVoxelBody(radius, height, material) {
     
     // Abdomen section (between torso and hips)
     const abdomenWidth = torsoWidth * 0.92;
-    const abdomenHeight = height * 0.22;
+    const abdomenHeight = height * 0.20;
     const abdomenDepth = torsoDepth * 0.95;
     const abdomen = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth, abdomenHeight, abdomenDepth), material);
-    abdomen.position.y = height * 0.24;
+    abdomen.position.y = height * 0.20;
     abdomen.castShadow = true;
     body.add(abdomen);
     
     // Hips / waist section
     const hipWidth = torsoWidth * 0.88;
-    const hipHeight = height * 0.18;
+    const hipHeight = height * 0.16;
     const hipDepth = torsoDepth * 0.92;
     const hips = new THREE.Mesh(new THREE.BoxGeometry(hipWidth, hipHeight, hipDepth), material);
-    hips.position.y = height * 0.12;
+    hips.position.y = height * 0.08;
     hips.castShadow = true;
     body.add(hips);
     
     // Groin/crotch piece (small connector between legs)
     const groinWidth = hipWidth * 0.55;
-    const groinHeight = height * 0.12;
+    const groinHeight = height * 0.10;
     const groinDepth = hipDepth * 0.75;
     const groin = new THREE.Mesh(new THREE.BoxGeometry(groinWidth, groinHeight, groinDepth), material);
-    groin.position.y = height * 0.04;
+    groin.position.y = 0;
     groin.castShadow = true;
     body.add(groin);
     
