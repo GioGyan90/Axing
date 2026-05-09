@@ -627,24 +627,37 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         const punchPhase = Math.sin(punch * Math.PI);
         
         // Body jumps up and extends
-        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.35 * punchPhase;
-        pose.visualRoot.rotation.z = 0.1 * punchPhase;  // Slight body tilt
-        pose.visualRoot.rotation.x = -0.15 * punchPhase;
+        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.4 * punchPhase;
+        pose.visualRoot.rotation.z = 0.3 * punchPhase;  // Body tilt
+        pose.visualRoot.rotation.x = -0.2 * punchPhase;
         
-        pose.body.position.y = bodyY + 0.2 * punchPhase;
-        pose.body.rotation.set(-0.1 * punchPhase, 0, 0.2 * punchPhase);
+        pose.body.position.y = bodyY + 0.25 * punchPhase;
+        pose.body.rotation.set(-0.15 * punchPhase, 0, 0.3 * punchPhase);
         
-        // Head looks up at the ball
-        pose.head.position.y = headY + 0.12 * punchPhase;
-        pose.head.rotation.set(-0.4 * punchPhase, 0, 0.1 * punchPhase);
+        // Head looks up at the ball, tilts same as body
+        pose.head.position.y = headY + 0.15 * punchPhase;
+        pose.head.rotation.set(-0.5 * punchPhase, 0, 0.3 * punchPhase);
         
-        // Right arm raised high with fist (punching motion), left arm balanced
-        setArmPose(pose.leftArm, 2.0 * punchPhase, 0.3, 1.6 * punchPhase);  // Left arm up for balance
-        setArmPose(pose.rightArm, -3.0 * punchPhase, 0.2, -2.8 * punchPhase);  // Right arm punching fully overhead
+        // Right arm: rotates fully upward from shoulder joint
+        // Start: hanging down (~-0.2), End: fully flipped up (Math.PI - 0.2 ≈ 2.94)
+        const rightArmAngle = -0.2 + punchPhase * Math.PI;
+        setArmPose(pose.rightArm, rightArmAngle, 0.15, 0);
         
-        // Legs: one leg bent, one extended for jump power
-        setLegPose(pose.leftLeg, -0.9 * punchPhase, 1.2 * punchPhase, -0.4 * punchPhase);
-        setLegPose(pose.rightLeg, -0.7 * punchPhase, 1.0 * punchPhase, 0.4 * punchPhase);
+        // Right forearm bends at elbow to bring fist forward/up during peak
+        const rightForearmBend = punchPhase > 0.5 ? (punchPhase - 0.5) * 2.5 : 0;
+        pose.rightForearm.rotation.x = rightForearmBend;
+        
+        // Left arm: balances by going opposite direction
+        const leftArmAngle = 0.2 - punchPhase * 1.8;
+        setArmPose(pose.leftArm, leftArmAngle, 0.2, 0);
+        
+        // Left forearm: slight bend for balance
+        pose.leftForearm.rotation.x = punchPhase * 1.0;
+        
+        // Legs: bend knees during jump, extend on landing
+        const kneeBend = punchPhase > 0.5 ? (1 - punchPhase) * 1.3 : punchPhase * 1.3;
+        setLegPose(pose.leftLeg, -kneeBend, 0.8 * punchPhase, -0.3 * punchPhase);
+        setLegPose(pose.rightLeg, -kneeBend, 0.6 * punchPhase, 0.3 * punchPhase);
         
         updatePlayerNameTagFlash(pose, elapsedTime, punchPhase);
         return;
