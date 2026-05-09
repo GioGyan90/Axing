@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FIELD, KEEPER_PROFILES } from './config.js';
-import { updateCharacterPose } from './assets.js';
+import { updateGoalkeeperAnimation } from './goalkeeper-animation.js';
 
 // 门将状态枚举（与 rules.js 保持一致）
 export const KEEPER_STATE = {
@@ -162,8 +162,8 @@ export function updatePunchAnimation({ dt, state, keeper, elapsedTime }) {
     const punchPhase = Math.sin(punchProgress * Math.PI);
     keeper.position.y = punchPhase * 0.3;  // 轻微跳跃
     
-    // 使用 diving 参数来触发自定义动画，但传入 punch 特定参数
-    updateCharacterPose(keeper, { 
+    // 使用 goalkeeper animation 来触发自定义动画，但传入 punch 特定参数
+    updateGoalkeeperAnimation(keeper, { 
         dt, 
         elapsedTime, 
         movement: keeper.userData.velocity, 
