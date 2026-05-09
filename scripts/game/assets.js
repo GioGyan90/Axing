@@ -346,18 +346,18 @@ function createJerseyBackNumber(number = '9', bodyScale = 1) {
 function createVoxelBody(radius, height, material) {
     const body = new THREE.Group();
     
-    // Torso - main box
+    // Torso - main box (upper chest)
     const torsoWidth = radius * 2.2;
     const torsoDepth = radius * 1.6;
-    const torsoHeight = height * 0.75;
+    const torsoHeight = height * 0.55;
     const torso = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth), material);
-    torso.position.y = height * 0.38;
+    torso.position.y = height * 0.48;
     torso.castShadow = true;
     body.add(torso);
     
     // Chest plate (slightly protruding)
-    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth * 0.85, torsoHeight * 0.45, torsoDepth * 0.3), material);
-    chestPlate.position.set(0, height * 0.45, torsoDepth * 0.15);
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth * 0.85, torsoHeight * 0.55, torsoDepth * 0.3), material);
+    chestPlate.position.set(0, height * 0.52, torsoDepth * 0.15);
     chestPlate.castShadow = true;
     body.add(chestPlate);
     
@@ -367,23 +367,41 @@ function createVoxelBody(radius, height, material) {
     const shoulderDepth = torsoDepth * 0.7;
     
     const leftShoulder = new THREE.Mesh(new THREE.BoxGeometry(shoulderWidth, shoulderHeight, shoulderDepth), material);
-    leftShoulder.position.set(-torsoWidth / 2 - shoulderWidth / 2 + radius * 0.3, height * 0.65, 0);
+    leftShoulder.position.set(-torsoWidth / 2 - shoulderWidth / 2 + radius * 0.3, height * 0.72, 0);
     leftShoulder.castShadow = true;
     body.add(leftShoulder);
     
     const rightShoulder = new THREE.Mesh(new THREE.BoxGeometry(shoulderWidth, shoulderHeight, shoulderDepth), material);
-    rightShoulder.position.set(torsoWidth / 2 + shoulderWidth / 2 - radius * 0.3, height * 0.65, 0);
+    rightShoulder.position.set(torsoWidth / 2 + shoulderWidth / 2 - radius * 0.3, height * 0.72, 0);
     rightShoulder.castShadow = true;
     body.add(rightShoulder);
     
+    // Abdomen section (between torso and hips)
+    const abdomenWidth = torsoWidth * 0.92;
+    const abdomenHeight = height * 0.22;
+    const abdomenDepth = torsoDepth * 0.95;
+    const abdomen = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth, abdomenHeight, abdomenDepth), material);
+    abdomen.position.y = height * 0.24;
+    abdomen.castShadow = true;
+    body.add(abdomen);
+    
     // Hips / waist section
-    const hipWidth = torsoWidth * 0.85;
-    const hipHeight = height * 0.25;
-    const hipDepth = torsoDepth * 0.9;
+    const hipWidth = torsoWidth * 0.88;
+    const hipHeight = height * 0.18;
+    const hipDepth = torsoDepth * 0.92;
     const hips = new THREE.Mesh(new THREE.BoxGeometry(hipWidth, hipHeight, hipDepth), material);
     hips.position.y = height * 0.12;
     hips.castShadow = true;
     body.add(hips);
+    
+    // Groin/crotch piece (small connector between legs)
+    const groinWidth = hipWidth * 0.55;
+    const groinHeight = height * 0.12;
+    const groinDepth = hipDepth * 0.75;
+    const groin = new THREE.Mesh(new THREE.BoxGeometry(groinWidth, groinHeight, groinDepth), material);
+    groin.position.y = height * 0.04;
+    groin.castShadow = true;
+    body.add(groin);
     
     return body;
 }

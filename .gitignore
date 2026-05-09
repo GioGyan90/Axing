@@ -1,10 +1,58 @@
 # Examples
-Input:
-### Added files:
-['scripts/game/assets.js']
-### Deleted files:
-[]
-### Modified files:
-['scripts/game/assets.js']
-###current .gitignore Content
-Your output: Only the optimized .gitignore content (or empty if no ignores needed).
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
+*.swp
+*.swo
+*.log
+*.tmp
+*.env
+*.env.local
+.env.*
+.zip
+.gz
+.tar
+.tgz
+.bz2
+.xz
+.7z
+.rar
+.zst
+.lz4
+.lzh
+.cab
+.arj
+.rpm
+.deb
+.Z
+.lz
+.lzo
+.tar.gz
+.tar.bz2
+.tar.xz
+.tar.zst
+.DS_Store
+Thumbs.db
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
+.coverage
+coverage/
+htmlcov/
+.julia/
+zig*/
+.vscode/
+.idea/
