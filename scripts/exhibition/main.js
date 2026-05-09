@@ -79,12 +79,13 @@ const galleryMovement = new THREE.Vector3();
 
 // Action configuration: movement speed and special flags for each action
 const actionConfig = {
-    idle: { speed: 0, sprint: false, kicking: false, diving: false },
-    walk: { speed: 1.2, sprint: false, kicking: false, diving: false },
-    run: { speed: 3.5, sprint: false, kicking: false, diving: false },
-    sprint: { speed: 5.5, sprint: true, kicking: false, diving: false },
-    kick: { speed: 0, sprint: false, kicking: true, diving: false },
-    dive: { speed: 0, sprint: false, kicking: false, diving: true },
+    idle: { speed: 0, sprint: false, kicking: false, diving: false, punching: false },
+    walk: { speed: 1.2, sprint: false, kicking: false, diving: false, punching: false },
+    run: { speed: 3.5, sprint: false, kicking: false, diving: false, punching: false },
+    sprint: { speed: 5.5, sprint: true, kicking: false, diving: false, punching: false },
+    kick: { speed: 0, sprint: false, kicking: true, diving: false, punching: false },
+    dive: { speed: 0, sprint: false, kicking: false, diving: true, punching: false },
+    punch: { speed: 0, sprint: false, kicking: false, diving: false, punching: true },
 };
 
 // Action select event listener
@@ -141,11 +142,13 @@ function animate() {
     // Get action config for current action
     const config = actionConfig[currentAction] || actionConfig.idle;
     
-    // For kick and dive actions, use periodic animation loop
+    // For kick, dive, and punch actions, use periodic animation loop
     let kicking = false;
     let diving = false;
+    let punching = false;
     let kickProgress = 0;
     let diveProgress = 0;
+    let punchProgress = 0;
     
     if (config.kicking) {
         // Loop kick animation every 1.2 seconds
@@ -157,6 +160,11 @@ function animate() {
         const diveCycleTime = (elapsedTime % 1.5) / 1.5;
         diving = true;
         diveProgress = diveCycleTime;
+    } else if (config.punching) {
+        // Loop punch animation every 1.3 seconds
+        const punchCycleTime = (elapsedTime % 1.3) / 1.3;
+        punching = true;
+        punchProgress = punchCycleTime;
     }
     
     Object.entries(characters).forEach(([key, character], index) => {
@@ -175,11 +183,13 @@ function animate() {
         updateCharacterPose(character, {
             dt,
             elapsedTime: elapsedTime + index * 0.25,
-            movement: galleryMovement.set(isFocused && !config.kicking && !config.diving ? moveSpeed : (config.speed > 0 ? moveSpeed : 0), 0, 0),
+            movement: galleryMovement.set(isFocused && !config.kicking && !config.diving && !config.punching ? moveSpeed : (config.speed > 0 ? moveSpeed : 0), 0, 0),
             kicking,
             kickProgress,
             diving,
             diveProgress,
+            punching,
+            punchProgress,
             isSprinting: config.sprint,
         });
     });

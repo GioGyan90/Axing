@@ -663,9 +663,9 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         pose.body.position.y = bodyY - 0.05 + 0.1 * divePhase;
         pose.body.rotation.set(-0.3 * divePhase, 0, 0.8 * divePhase);  // More pronounced lean
         
-        // Head follows body as a child (inherits body rotation, minimal independent movement)
+        // Head tilts same as body (inherits body rotation fully)
         pose.head.position.y = headY - 0.02 + 0.08 * divePhase;
-        pose.head.rotation.set(-0.1 * divePhase, 0, 0.3 * divePhase);  // Minimal independent rotation, mostly follows body
+        pose.head.rotation.set(-0.3 * divePhase, 0, 0.8 * divePhase);  // Same tilt as body
         
         // Both arms stretched out wide and UP to block the ball (hands raised)
         setArmPose(pose.leftArm, 2.1 * divePhase, 0.35, 1.65 * divePhase);  // Higher arm position
