@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HOME_MODEL_URL } from './assets.js';
 
-let scene, camera, renderer, model;
+let scene, camera, renderer, model, playerModel;
 let mouseX = 0, mouseY = 0;
 
 const getIsMobile = () => window.innerWidth <= 768;
@@ -29,6 +29,10 @@ function init3D() {
         model = gltf.scene;
         updateModelLayout();
         scene.add(model);
+        
+        // 加载球员模型
+        loadPlayerModel(loader);
+        
         animate();
     });
 
@@ -58,6 +62,45 @@ function updateModelLayout() {
         model.scale.set(2.2, 2.2, 2.2);
         model.position.set(0.8, -0.3, 0);
     }
+    
+    // 更新球员位置
+    if (playerModel) {
+        if (getIsMobile()) {
+            playerModel.position.set(-1.5, 0.1, 0);
+            playerModel.scale.set(1.6, 1.6, 1.6);
+        } else {
+            playerModel.position.set(-1.2, -0.3, 0);
+            playerModel.scale.set(2.2, 2.2, 2.2);
+        }
+    }
+}
+
+function loadPlayerModel(loader) {
+    const headUrl = new URL('../../models/red_compressed.glb', import.meta.url).href;
+    
+    // 克隆 ZL9 身体模型
+    const bodyClone = model.clone();
+    playerModel = bodyClone;
+    
+    // 加载头部模型并替换
+    loader.load(headUrl, (headGltf) => {
+        const headModel = headGltf.scene;
+        
+        // 查找并移除原身体的头部
+        bodyClone.traverse((child) => {
+            if (child.isMesh && child.name.toLowerCase().includes('head')) {
+                child.visible = false;
+            }
+        });
+        
+        // 设置头部位置和缩放
+        headModel.scale.set(1, 1, 1);
+        headModel.position.set(0, 1.6, 0);
+        bodyClone.add(headModel);
+        
+        scene.add(playerModel);
+        updateModelLayout();
+    });
 }
 
 function animate() {
@@ -66,6 +109,11 @@ function animate() {
         model.rotation.y += 0.005;
         model.rotation.x += (mouseY * 0.1 - model.rotation.x) * 0.05;
         model.rotation.z += (mouseX * 0.1 - model.rotation.z) * 0.05;
+    }
+    if (playerModel) {
+        playerModel.rotation.y += 0.005;
+        playerModel.rotation.x += (mouseY * 0.1 - playerModel.rotation.x) * 0.05;
+        playerModel.rotation.z += (mouseX * 0.1 - playerModel.rotation.z) * 0.05;
     }
     renderer.render(scene, camera);
 }
