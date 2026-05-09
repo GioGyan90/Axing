@@ -144,6 +144,7 @@ export function createCharacter(materials, material, type) {
     const shorts = new THREE.MeshStandardMaterial({ color: shortsColor, roughness: 0.62 });
     const socks = new THREE.MeshStandardMaterial({ color: 0xf6f7ff, roughness: 0.5 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.58 });
+    const glove = new THREE.MeshStandardMaterial({ color: 0xf2f7ff, roughness: 0.46, metalness: 0.03 });
     const hairMaterial = new THREE.MeshStandardMaterial({ color: type === 'player' ? 0x3b2415 : 0x21140f, roughness: 0.7 });
 
     const body = createVoxelBody(scaleValue(0.34), scaleValue(CHARACTER_BODY_HEIGHT), material, shorts);
@@ -162,14 +163,14 @@ export function createCharacter(materials, material, type) {
 
     const limbs = new THREE.Group();
     const limbRefs = {
-        leftArm: createLimb({ upperLength: scaleValue(0.29), lowerLength: scaleValue(0.28), radius: scaleValue(0.055), upperMaterial: material, lowerMaterial: skin, endMaterial: skin, endScale: scaleTuple([0.11, 0.08, 0.11]) }),
-        rightArm: createLimb({ upperLength: scaleValue(0.29), lowerLength: scaleValue(0.28), radius: scaleValue(0.055), upperMaterial: material, lowerMaterial: skin, endMaterial: skin, endScale: scaleTuple([0.11, 0.08, 0.11]) }),
+        leftArm: createLimb({ upperLength: scaleValue(0.29), lowerLength: scaleValue(0.28), radius: scaleValue(0.055), upperMaterial: material, lowerMaterial: skin, endMaterial: type === 'keeper' ? glove : skin, endScale: scaleTuple([0.145, 0.105, 0.135]) }),
+        rightArm: createLimb({ upperLength: scaleValue(0.29), lowerLength: scaleValue(0.28), radius: scaleValue(0.055), upperMaterial: material, lowerMaterial: skin, endMaterial: type === 'keeper' ? glove : skin, endScale: scaleTuple([0.145, 0.105, 0.135]) }),
         leftLeg: createLimb({ upperLength: scaleValue(0.43), lowerLength: scaleValue(0.39), radius: scaleValue(0.098), upperMaterial: shorts, lowerMaterial: socks, endMaterial: boot, endScale: scaleTuple([0.22, 0.11, 0.34]) }),
         rightLeg: createLimb({ upperLength: scaleValue(0.43), lowerLength: scaleValue(0.39), radius: scaleValue(0.098), upperMaterial: shorts, lowerMaterial: socks, endMaterial: boot, endScale: scaleTuple([0.22, 0.11, 0.34]) }),
     };
 
-    limbRefs.leftArm.hip.position.set(scaleValue(-0.34), scaleValue(0.98), 0);
-    limbRefs.rightArm.hip.position.set(scaleValue(0.34), scaleValue(0.98), 0);
+    limbRefs.leftArm.hip.position.set(scaleValue(-0.46), scaleValue(0.98), 0);
+    limbRefs.rightArm.hip.position.set(scaleValue(0.46), scaleValue(0.98), 0);
     limbRefs.leftLeg.hip.position.set(scaleValue(-0.19), scaleValue(0.42), 0);
     limbRefs.rightLeg.hip.position.set(scaleValue(0.19), scaleValue(0.42), 0);
     limbs.add(limbRefs.leftArm.hip, limbRefs.rightArm.hip, limbRefs.leftLeg.hip, limbRefs.rightLeg.hip);
@@ -385,12 +386,12 @@ function createVoxelBody(radius, height, material, lowerBodyMaterial = material)
     abdomen.castShadow = true;
     body.add(abdomen);
 
-    // Long rectangular filler block for the front abdomen. This closes the
-    // visible hollow between the shirt and the upper legs on the ZL9 model.
-    const abdomenFiller = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth * 0.78, height * 0.95, abdomenDepth * 0.82), material);
-    abdomenFiller.position.set(0, -height * 0.12, abdomenDepth * 0.04);
-    abdomenFiller.castShadow = true;
-    body.add(abdomenFiller);
+    // Waist block between the belly and legs. Match the shorts color so the
+    // lower-body rectangle reads as pants instead of a shirt-colored filler.
+    const waistFiller = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth * 0.82, height * 0.9, abdomenDepth * 0.84), lowerBodyMaterial);
+    waistFiller.position.set(0, -height * 0.12, abdomenDepth * 0.04);
+    waistFiller.castShadow = true;
+    body.add(waistFiller);
     
     // Hips / waist section
     const hipWidth = torsoWidth * 0.88;
