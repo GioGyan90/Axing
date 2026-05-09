@@ -1,7 +1,7 @@
 export const FIELD = Object.freeze({
     width: 16 * 2 / 3,
     depth: 24 * 2 / 3,
-    goalZ: -11.8 * 2 / 3,
+    goalZ: -11.8 * 2 / 3 + 0.5,
     boundaryOffset: 0.18,
 });
 
