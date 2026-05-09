@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { BALL_GROUND_Y, BALL_RADIUS, FIELD, KEEPER_PROFILES } from './config.js';
-import { flashCharacterHit, updateCharacterPose } from './assets.js';
+import { flashCharacterHit } from './assets.js';
+import { updatePlayerAnimation } from './player-animation.js';
+import { updateGoalkeeperAnimation } from './goalkeeper-animation.js';
 import { kickBall, kickDownKeeper } from './kicking.js';
 import { updateDribbling } from './dribbling.js';
 import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, KEEPER_STATE as PUNCH_STATE } from './goalkeeper.js';
@@ -237,7 +239,7 @@ export function updateReferee({ dt, state, referee, player, keeper, elapsedTime 
 
     const watchTarget = state.pendingRefereeFailure ? player.position : keeper.position.clone().lerp(player.position, 0.45);
     referee.rotation.y = Math.atan2(watchTarget.x - referee.position.x, watchTarget.z - referee.position.z);
-    updateCharacterPose(referee, { dt, elapsedTime, movement: referee.userData.velocity });
+    updatePlayerAnimation(referee, { dt, elapsedTime, movement: referee.userData.velocity });
 }
 
 export function consumeRefereeFailureIfReady(state, elapsedTime) {
@@ -280,7 +282,7 @@ export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, e
     if (state.gameOver) {
         state.isDribbling = false;
         player.userData.velocity.set(0, 0, 0);
-        updateCharacterPose(player, { dt, elapsedTime, movement: player.userData.velocity });
+        updatePlayerAnimation(player, { dt, elapsedTime, movement: player.userData.velocity });
         return;
     }
     
@@ -322,7 +324,7 @@ export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, e
     player.position.z = THREE.MathUtils.clamp(player.position.z, -FIELD.depth / 2 + 0.6, FIELD.depth / 2 - 0.7);
     state.kickPoseTimer = Math.max(0, state.kickPoseTimer - dt);
     updateDribbling({ dt, state, keys, player, ball, getAimDirection, elapsedTime });
-    updateCharacterPose(player, {
+    updatePlayerAnimation(player, {
         dt,
         elapsedTime,
         movement: player.userData.velocity,
@@ -418,7 +420,7 @@ function checkGoalPostCollision(ball, state) {
 export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSave }) {
     if (state.gameOver) {
         keeper.userData.velocity.set(0, 0, 0);
-        updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
+        updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
         return;
     }
     
@@ -433,7 +435,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
         const getUpProgress = elapsedTime <= state.keeperDownUntil
             ? 0
             : THREE.MathUtils.clamp((elapsedTime - state.keeperDownUntil) / getUpDuration, 0, 1);
-        updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
+        updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
         keeper.scale.set(1, 1, 1);
         return;
     }
@@ -452,7 +454,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 // 保持下蹲姿势
                 const squatProgress = squatElapsed / squatDuration;
                 keeper.userData.velocity.set(0, 0, 0);
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, kicking: true, kickPower: squatProgress, kickPhase: 'charge' });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocking: true, knockProgress: squatProgress });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -472,7 +474,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 const jumpProgress = jumpElapsed / jumpDuration;
                 keeper.userData.velocity.set(0, 0, 0);
                 keeper.position.y = Math.sin(jumpProgress * Math.PI) * 0.8; // 抛物线跳跃
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress: jumpProgress });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress: jumpProgress });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -492,7 +494,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 const diveProgress = diveElapsed / diveDuration;
                 keeper.userData.velocity.set(0, 0, 0);
                 keeper.position.y = Math.max(0, 0.8 - diveProgress * 0.8); // 逐渐落地
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -512,7 +514,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 const landProgress = landElapsed / landDuration;
                 keeper.userData.velocity.set(0, 0, 0);
                 keeper.position.y = 0;
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress: landProgress * 0.3 });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress: landProgress * 0.3 });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -533,7 +535,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 const getUpProgress = getUpElapsed / getUpDuration;
                 keeper.userData.velocity.set(0, 0, 0);
                 keeper.position.y = 0;
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -549,7 +551,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
                 keeper.userData.velocity.set(0, 0, 0);
                 const getUpDuration = profile.getUpDuration || 0.6;
                 const getUpProgress = elapsedTime <= state.keeperDownUntil ? 0 : THREE.MathUtils.clamp((elapsedTime - state.keeperDownUntil) / getUpDuration, 0, 1);
-                updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
+                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
                 keeper.scale.set(1, 1, 1);
                 return;
             }
@@ -622,7 +624,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
     }
 
     keeper.rotation.y = Math.atan2(ball.position.x - keeper.position.x, ball.position.z - keeper.position.z);
-    updateCharacterPose(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
+    updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
 
     const danger = ball.position.z < FIELD.goalZ + 1.35 && state.ballVelocity.z < -0.8;
     keeper.scale.set(1, danger ? 0.82 : 1, danger ? 1.22 : 1);
@@ -881,10 +883,10 @@ export function resetRound({ state, player, keeper, referee, ball, showMessage }
         referee.position.set(-sidelineOffset, 0, 1.35);
         referee.rotation.y = Math.PI * 0.35;
         referee.userData.velocity.set(0, 0, 0);
-        updateCharacterPose(referee, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
+        updatePlayerAnimation(referee, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
     }
-    updateCharacterPose(player, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
-    updateCharacterPose(keeper, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
+    updatePlayerAnimation(player, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
+    updateGoalkeeperAnimation(keeper, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
     showMessage(message);
     window.setTimeout(() => { state.isResetting = false; }, 420);
 }
