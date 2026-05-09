@@ -384,6 +384,13 @@ function createVoxelBody(radius, height, material, lowerBodyMaterial = material)
     abdomen.position.y = height * 0.20;
     abdomen.castShadow = true;
     body.add(abdomen);
+
+    // Long rectangular filler block for the front abdomen. This closes the
+    // visible hollow between the shirt and the upper legs on the ZL9 model.
+    const abdomenFiller = new THREE.Mesh(new THREE.BoxGeometry(abdomenWidth * 0.78, height * 0.95, abdomenDepth * 0.82), material);
+    abdomenFiller.position.set(0, -height * 0.12, abdomenDepth * 0.04);
+    abdomenFiller.castShadow = true;
+    body.add(abdomenFiller);
     
     // Hips / waist section
     const hipWidth = torsoWidth * 0.88;
