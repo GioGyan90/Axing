@@ -146,15 +146,14 @@ export function createCharacter(materials, material, type) {
     const boot = new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.58 });
     const hairMaterial = new THREE.MeshStandardMaterial({ color: type === 'player' ? 0x3b2415 : 0x21140f, roughness: 0.7 });
 
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(scaleValue(0.34), scaleValue(CHARACTER_BODY_HEIGHT), 6, 12), material);
+    const body = createVoxelBody(scaleValue(0.34), scaleValue(CHARACTER_BODY_HEIGHT), material);
     body.position.y = bodyBaseY;
     body.castShadow = true;
 
     const head = new THREE.Group();
     head.position.y = headBaseY;
-    const fallbackHead = new THREE.Mesh(new THREE.SphereGeometry(0.25, 18, 14), skin);
+    const fallbackHead = createVoxelHead(skin, hairMaterial, type);
     fallbackHead.castShadow = true;
-    fallbackHead.add(createLegoHair(hairMaterial, type));
     head.add(fallbackHead);
 
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.58, 28), materials.shadow);
@@ -344,55 +343,150 @@ function createJerseyBackNumber(number = '9', bodyScale = 1) {
     return numberPlane;
 }
 
-function createLegoHair(material, type) {
+function createVoxelBody(radius, height, material) {
+    const body = new THREE.Group();
+    
+    // Torso - main box
+    const torsoWidth = radius * 2.2;
+    const torsoDepth = radius * 1.6;
+    const torsoHeight = height * 0.75;
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth), material);
+    torso.position.y = height * 0.38;
+    torso.castShadow = true;
+    body.add(torso);
+    
+    // Chest plate (slightly protruding)
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth * 0.85, torsoHeight * 0.45, torsoDepth * 0.3), material);
+    chestPlate.position.set(0, height * 0.45, torsoDepth * 0.15);
+    chestPlate.castShadow = true;
+    body.add(chestPlate);
+    
+    // Shoulders
+    const shoulderWidth = radius * 0.9;
+    const shoulderHeight = radius * 0.6;
+    const shoulderDepth = torsoDepth * 0.7;
+    
+    const leftShoulder = new THREE.Mesh(new THREE.BoxGeometry(shoulderWidth, shoulderHeight, shoulderDepth), material);
+    leftShoulder.position.set(-torsoWidth / 2 - shoulderWidth / 2 + radius * 0.3, height * 0.65, 0);
+    leftShoulder.castShadow = true;
+    body.add(leftShoulder);
+    
+    const rightShoulder = new THREE.Mesh(new THREE.BoxGeometry(shoulderWidth, shoulderHeight, shoulderDepth), material);
+    rightShoulder.position.set(torsoWidth / 2 + shoulderWidth / 2 - radius * 0.3, height * 0.65, 0);
+    rightShoulder.castShadow = true;
+    body.add(rightShoulder);
+    
+    // Hips / waist section
+    const hipWidth = torsoWidth * 0.85;
+    const hipHeight = height * 0.25;
+    const hipDepth = torsoDepth * 0.9;
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(hipWidth, hipHeight, hipDepth), material);
+    hips.position.y = height * 0.12;
+    hips.castShadow = true;
+    body.add(hips);
+    
+    return body;
+}
+
+function createVoxelHead(skinMaterial, hairMaterial, type) {
+    const head = new THREE.Group();
+    
+    // Main head cube
+    const headSize = 0.42;
+    const headBox = new THREE.Mesh(new THREE.BoxGeometry(headSize, headSize, headSize * 0.9), skinMaterial);
+    headBox.castShadow = true;
+    head.add(headBox);
+    
+    // Eyes (two small boxes)
+    const eyeSize = 0.06;
+    const eyeY = headSize * 0.08;
+    const eyeZ = headSize * 0.42;
+    
+    const leftEye = new THREE.Mesh(new THREE.BoxGeometry(eyeSize, eyeSize, 0.03), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+    leftEye.position.set(-headSize * 0.22, eyeY, eyeZ);
+    leftEye.castShadow = true;
+    head.add(leftEye);
+    
+    const rightEye = new THREE.Mesh(new THREE.BoxGeometry(eyeSize, eyeSize, 0.03), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+    rightEye.position.set(headSize * 0.22, eyeY, eyeZ);
+    rightEye.castShadow = true;
+    head.add(rightEye);
+    
+    // Nose (small box)
+    const nose = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.05), skinMaterial);
+    nose.position.set(0, eyeY - 0.05, headSize * 0.45);
+    nose.castShadow = true;
+    head.add(nose);
+    
+    // Mouth (thin box)
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.03), new THREE.MeshStandardMaterial({ color: 0x8b4513 }));
+    mouth.position.set(0, eyeY - 0.12, headSize * 0.43);
+    mouth.castShadow = true;
+    head.add(mouth);
+    
+    // Add voxel hair
+    head.add(createVoxelHair(hairMaterial, type));
+    
+    return head;
+}
+
+function createVoxelHair(material, type) {
     const hair = new THREE.Group();
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.42), material);
-    cap.position.set(0, 0.18, 0.01);
-    cap.castShadow = true;
-    hair.add(cap);
-
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.16, 0.12), material);
-    back.position.set(0, 0.08, 0.2);
-    back.castShadow = true;
-    hair.add(back);
-
-    const sideWidth = type === 'player' ? 0.1 : 0.08;
-    const leftSide = new THREE.Mesh(new THREE.BoxGeometry(sideWidth, 0.18, 0.3), material);
-    leftSide.position.set(-0.22, 0.08, 0.02);
+    
+    // Top cap
+    const topCap = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.12, 0.4), material);
+    topCap.position.set(0, 0.22, 0);
+    topCap.castShadow = true;
+    hair.add(topCap);
+    
+    // Back section
+    const backSection = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.14, 0.14), material);
+    backSection.position.set(0, 0.12, 0.22);
+    backSection.castShadow = true;
+    hair.add(backSection);
+    
+    // Side sections
+    const sideWidth = type === 'player' ? 0.11 : 0.09;
+    const sideHeight = 0.16;
+    const sideDepth = 0.28;
+    
+    const leftSide = new THREE.Mesh(new THREE.BoxGeometry(sideWidth, sideHeight, sideDepth), material);
+    leftSide.position.set(-0.24, 0.1, 0.02);
     leftSide.castShadow = true;
     hair.add(leftSide);
-
-    const rightSide = leftSide.clone();
-    rightSide.position.x = 0.22;
+    
+    const rightSide = new THREE.Mesh(new THREE.BoxGeometry(sideWidth, sideHeight, sideDepth), material);
+    rightSide.position.set(0.24, 0.1, 0.02);
     rightSide.castShadow = true;
     hair.add(rightSide);
-
+    
+    // Fringe/bangs (front blocks)
     const fringeBlocks = type === 'player'
         ? [
-            [-0.15, 0.08, -0.2, 0.18, 0.12, 0.11],
-            [0.04, 0.06, -0.22, 0.2, 0.1, 0.1],
-            [0.18, 0.09, -0.18, 0.12, 0.13, 0.09],
+            [-0.14, 0.1, -0.18, 0.16, 0.1, 0.1],
+            [0.02, 0.08, -0.2, 0.18, 0.09, 0.09],
+            [0.16, 0.11, -0.17, 0.11, 0.11, 0.08],
         ]
         : [
-            [-0.1, 0.07, -0.2, 0.2, 0.11, 0.1],
-            [0.11, 0.08, -0.19, 0.17, 0.12, 0.1],
+            [-0.09, 0.09, -0.19, 0.18, 0.1, 0.09],
+            [0.1, 0.1, -0.18, 0.15, 0.11, 0.09],
         ];
-
+    
     fringeBlocks.forEach(([x, y, z, width, height, depth]) => {
         const block = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
         block.position.set(x, y, z);
         block.castShadow = true;
         hair.add(block);
     });
-
+    
     return hair;
 }
 
 function createLimb({ upperLength, lowerLength, radius, upperMaterial, lowerMaterial, endMaterial, endScale }) {
     const hip = new THREE.Group();
     const knee = new THREE.Group();
-    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(radius, upperLength, 5, 8), upperMaterial);
-    const lower = new THREE.Mesh(new THREE.CapsuleGeometry(radius * 0.88, lowerLength, 5, 8), lowerMaterial);
+    const upper = createVoxelLimbSegment(radius, upperLength, upperMaterial);
+    const lower = createVoxelLimbSegment(radius * 0.88, lowerLength, lowerMaterial);
     const end = new THREE.Mesh(new THREE.BoxGeometry(...endScale), endMaterial);
 
     upper.position.y = -upperLength / 2;
@@ -404,6 +498,28 @@ function createLimb({ upperLength, lowerLength, radius, upperMaterial, lowerMate
     knee.add(lower, end);
     hip.add(upper, knee);
     return { hip, knee, upper, lower, end };
+}
+
+function createVoxelLimbSegment(radius, length, material) {
+    const segment = new THREE.Group();
+    
+    // Main limb box
+    const width = radius * 2;
+    const depth = radius * 1.6;
+    const mainBox = new THREE.Mesh(new THREE.BoxGeometry(width, length, depth), material);
+    mainBox.castShadow = true;
+    segment.add(mainBox);
+    
+    // Joint connector at top (slightly wider)
+    const jointHeight = length * 0.15;
+    const jointWidth = width * 1.15;
+    const jointDepth = depth * 1.1;
+    const joint = new THREE.Mesh(new THREE.BoxGeometry(jointWidth, jointHeight, jointDepth), material);
+    joint.position.y = -length / 2 + jointHeight / 2;
+    joint.castShadow = true;
+    segment.add(joint);
+    
+    return segment;
 }
 
 export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, isSprinting = false } = {}) {
