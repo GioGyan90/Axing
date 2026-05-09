@@ -638,8 +638,8 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         pose.head.position.y = headY + 0.15 * punchPhase;
         pose.head.rotation.set(-0.5 * punchPhase, 0, 0.3 * punchPhase);
         
-        // Right arm: rotates fully upward from shoulder joint
-        // Start: hanging down (~-0.2), End: fully flipped up (Math.PI - 0.2 ≈ 2.94)
+        // Right arm: rotates fully forward from shoulder joint (forward rotation for punching)
+        // Start: hanging down (~-0.2), End: fully rotated forward (Math.PI - 0.2 ≈ 2.94)
         const rightArmAngle = -0.2 + punchPhase * Math.PI;
         setArmPose(pose.rightArm, rightArmAngle, 0.15, 0);
         
@@ -648,8 +648,8 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         const rightForearmBend = punchPhase > 0.5 ? (punchPhase - 0.5) * 2.5 : 0;
         pose.rightArm.knee.rotation.x = rightForearmBend;
         
-        // Left arm: balances by going opposite direction
-        const leftArmAngle = 0.2 - punchPhase * 1.8;
+        // Left arm: balances by going opposite direction (forward rotation)
+        const leftArmAngle = 0.2 - punchPhase * Math.PI;
         setArmPose(pose.leftArm, leftArmAngle, 0.2, 0);
         
         // Left forearm: slight bend for balance
