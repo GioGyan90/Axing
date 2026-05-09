@@ -52,7 +52,6 @@ export function buildPitch(world, materials) {
 
     addBoundaryLines(world, materials);
     addLine(world, materials, 0, 0.08, 0, FIELD.width, 0.05, 0.08);
-    addLine(world, materials, 0, 0.09, 0, 0.05, 0.05, FIELD.depth);
     addLine(world, materials, 0, 0.1, FIELD.goalZ + 1.6, FIELD.width * 0.55, 0.05, 0.08);
     addLine(world, materials, -FIELD.width * 0.275, 0.1, FIELD.goalZ + 0.8, 0.05, 0.05, 1.6);
     addLine(world, materials, FIELD.width * 0.275, 0.1, FIELD.goalZ + 0.8, 0.05, 0.05, 1.6);
@@ -555,7 +554,7 @@ function createVoxelLimbSegment(radius, length, material) {
     return segment;
 }
 
-export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, isSprinting = false } = {}) {
+export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, isSprinting = false, isDribbling = false } = {}) {
     const pose = character.userData.pose;
     if (!pose) return;
 
@@ -568,7 +567,7 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
     const bodyY = pose.bodyBaseY ?? CHARACTER_BODY_Y;
     const headY = pose.headBaseY ?? CHARACTER_HEAD_Y;
     const runAmount = THREE.MathUtils.clamp(pose.speed / 5.2, 0, 1);
-    const sprintFactor = isSprinting ? 1.35 : 1.0;
+    const sprintFactor = isSprinting ? 1.35 : (isDribbling ? 1.18 : 1.0);
     pose.visualRoot.rotation.set(0, 0, 0);
     pose.visualRoot.position.set(0, FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE, 0);
 
@@ -625,9 +624,9 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
     const sideBob = Math.sin(phase * 2) * runAmount;
     
     // Sprint: more knee bend (屈膝), more arm bend (屈臂), more vertical bobbing (上下颠簸)
-    const kneeBendMultiplier = isSprinting ? 1.45 : 1.0;
-    const armBendMultiplier = isSprinting ? 1.35 : 1.0;
-    const verticalBobMultiplier = isSprinting ? 1.65 : 1.0;
+    const kneeBendMultiplier = isSprinting ? 1.45 : (isDribbling ? 1.28 : 1.0);
+    const armBendMultiplier = isSprinting ? 1.35 : (isDribbling ? 1.18 : 1.0);
+    const verticalBobMultiplier = isSprinting ? 1.65 : (isDribbling ? 1.25 : 1.0);
 
     pose.body.position.y = bodyY + lift * 0.035 * verticalBobMultiplier;
     pose.body.rotation.set(-0.08 * runAmount * sprintFactor, 0, sideBob * 0.035);

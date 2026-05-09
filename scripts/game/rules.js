@@ -127,6 +127,9 @@ export function createGameState() {
         sprintCooldownUntil: 0,
         pendingSaveNotification: false,
         predictedInterceptPoint: null, // 预判的拦截点
+        isDribbling: false,
+        dribbleBreakUntil: 0,
+        dribbleNeedsRetouch: false,
     };
 }
 
@@ -252,8 +255,27 @@ function isInRefereeVision(target, referee) {
     return angle <= REFEREE_VISION_HALF_ANGLE;
 }
 
+
+export function breakDribble(state, player, ball, elapsedTime) {
+    const canBreakDribble = state.isDribbling || flatDistance(player.position, ball.position) < 0.9;
+    if (!canBreakDribble) return false;
+    const releaseDirection = player.userData.facing.clone();
+    releaseDirection.y = 0;
+    if (releaseDirection.lengthSq() < 0.001) releaseDirection.set(0, 0, -1);
+    releaseDirection.normalize();
+
+    state.isDribbling = false;
+    state.dribbleBreakUntil = elapsedTime + 0.45;
+    state.dribbleNeedsRetouch = true;
+    state.ballVelocity.x = releaseDirection.x * 0.35;
+    state.ballVelocity.z = releaseDirection.z * 0.35;
+    ball.position.addScaledVector(releaseDirection, 0.08);
+    return true;
+}
+
 export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, elapsedTime }) {
     if (state.gameOver) {
+        state.isDribbling = false;
         player.userData.velocity.set(0, 0, 0);
         updateCharacterPose(player, { dt, elapsedTime, movement: player.userData.velocity });
         return;
@@ -296,6 +318,7 @@ export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, e
     player.position.x = THREE.MathUtils.clamp(player.position.x, -FIELD.width / 2 + 0.6, FIELD.width / 2 - 0.6);
     player.position.z = THREE.MathUtils.clamp(player.position.z, -FIELD.depth / 2 + 0.6, FIELD.depth / 2 - 0.7);
     state.kickPoseTimer = Math.max(0, state.kickPoseTimer - dt);
+    updateDribbling({ dt, state, keys, player, ball, getAimDirection, elapsedTime });
     updateCharacterPose(player, {
         dt,
         elapsedTime,
@@ -305,83 +328,9 @@ export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, e
         kickPhase: state.kickPoseTimer > 0 ? 'release' : 'charge',
         kickProgress: state.kickPoseTimer > 0 ? state.kickPoseTimer / Math.max(state.kickPoseDuration, 0.001) : 0,
         isSprinting: state.isSprinting,
+        isDribbling: state.isDribbling,
     });
 
-    const distanceToBall = flatDistance(player.position, ball.position);
-    const isControllingBall = distanceToBall < 0.9 && ball.position.y <= BALL_GROUND_Y + 0.08 && horizontalSpeed(state.ballVelocity) < 3.8;
-    if (isControllingBall) {
-        const aimDirection = getAimDirection();
-        if (move.lengthSq() === 0 || state.isChargingKick) {
-            player.userData.facing.copy(aimDirection);
-            player.rotation.y = Math.atan2(aimDirection.x, aimDirection.z);
-        }
-        
-        // 带球物理：通过限制最大加速度实现自然的球跟随效果
-        // 小幅度移动时球能跟上，大幅度快速横移时球因惯性拉脱
-        const dribbleDirection = move.lengthSq() > 0 ? player.userData.facing.clone() : aimDirection;
-        
-        // 计算理想的目标球位置：基于当前球相对位置，但限制在球员前方扇形区域内
-        // 这样无论纵向还是横向移动，球都能自然跟随
-        const ballOffset = ball.position.clone().sub(player.position);
-        ballOffset.y = 0;
-        const distToPlayer = ballOffset.length();
-        
-        // 理想距离：球应该保持在球员前方 0.45-0.65 单位处
-        const idealDist = 0.55;
-        let targetBallPos;
-        
-        if (distToPlayer > 0.01) {
-            // 计算球相对于球员朝向的角度
-            const forward = dribbleDirection.clone();
-            const angleToForward = forward.angleTo(ballOffset.clone().normalize());
-            
-            // 如果球在身后或侧面太远，将其拉回前方
-            const maxAngle = THREE.MathUtils.degToRad(70); // 允许的最大角度
-            const clampedAngle = Math.min(angleToForward, maxAngle);
-            
-            // 计算目标方向：在球员朝向前方 clampedAngle 范围内
-            const targetDir = ballOffset.clone().normalize();
-            if (angleToForward > maxAngle) {
-                // 球在太侧面的位置，将其投影到最大角度方向
-                const projection = forward.clone().multiplyScalar(Math.cos(maxAngle));
-                const sideDir = ballOffset.clone().normalize().sub(forward.clone().multiplyScalar(Math.cos(angleToForward))).normalize();
-                targetDir.copy(projection.addScaledVector(sideDir, Math.sin(maxAngle))).normalize();
-            }
-            
-            targetBallPos = player.position.clone().add(targetDir.multiplyScalar(idealDist));
-        } else {
-            // 球就在脚下，放在正前方
-            targetBallPos = player.position.clone().add(dribbleDirection.clone().multiplyScalar(idealDist));
-        }
-        
-        // 计算将球拉向理想位置所需的加速度
-        const toTarget = targetBallPos.clone().sub(ball.position);
-        toTarget.y = 0;
-        const distanceToTarget = toTarget.length();
-        
-        // 弹簧力系数和阻尼
-        const springConstant = 22.0;
-        const dampingFactor = 7.5;
-        
-        // 计算弹簧力产生的加速度
-        let acceleration = toTarget.normalize().multiplyScalar(distanceToTarget * springConstant);
-        
-        // 添加阻尼（抵抗球的当前速度）
-        const ballHorizontalVel = new THREE.Vector3(state.ballVelocity.x, 0, state.ballVelocity.z);
-        const dampingForce = ballHorizontalVel.multiplyScalar(-dampingFactor);
-        acceleration.add(dampingForce);
-        
-        // 限制最大加速度，实现拉脱效果
-        // 纵向加速度限制较宽松，横向加速度限制较严格
-        const maxAcceleration = 18.0;
-        if (acceleration.length() > maxAcceleration) {
-            acceleration.normalize().multiplyScalar(maxAcceleration);
-        }
-        
-        // 应用加速度到球的速度
-        state.ballVelocity.x += acceleration.x * dt;
-        state.ballVelocity.z += acceleration.z * dt;
-    }
 }
 
 export function updateBall({ dt, state, ball }) {
@@ -906,6 +855,9 @@ export function resetRound({ state, player, keeper, referee, ball, showMessage }
     state.refereeWarningMessage = '';
     state.pendingSaveNotification = false;
     state.predictedInterceptPoint = null;
+    state.isDribbling = false;
+    state.dribbleBreakUntil = 0;
+    state.dribbleNeedsRetouch = false;
     player.userData.facing.set(0, 0, -1);
     player.rotation.y = Math.PI;
     if (referee) {
