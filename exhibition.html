@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZL9 模型展览馆</title>
+    <link rel="stylesheet" href="./styles/exhibition.css">
+</head>
+<body>
+    <main class="gallery-shell" aria-label="ZL9 模型展览馆">
+        <section class="gallery-copy panel">
+            <p class="eyebrow">MODEL GALLERY</p>
+            <h1>ZL9 模型展览馆</h1>
+            <p>在这里查看玩家、队员和裁判的 3D 模型。点击下方按钮可切换聚焦对象，也可以直接拖动画面旋转视角。</p>
+            <div class="model-tabs" role="tablist" aria-label="选择展览模型">
+                <button class="model-tab active" data-target="player" type="button">玩家</button>
+                <button class="model-tab" data-target="keeper" type="button">队员</button>
+                <button class="model-tab" data-target="referee" type="button">裁判</button>
+            </div>
+            <div class="action-controls">
+                <label for="action-select">循环动作：</label>
+                <select id="action-select">
+                    <option value="idle">待机</option>
+                    <option value="walk">行走</option>
+                    <option value="run">跑步</option>
+                    <option value="sprint">冲刺</option>
+                    <option value="kick">射门</option>
+                    <option value="dive">侧扑</option>
+                </select>
+            </div>
+            <div class="gallery-actions">
+                <a class="btn primary" href="./isometric-football.html">进入足球小游戏</a>
+                <a class="btn" href="./index.html">返回首页</a>
+            </div>
+        </section>
+        <section class="stage-wrap panel" aria-label="三维模型舞台">
+            <div id="exhibition-canvas" class="stage-canvas"></div>
+            <div class="stage-caption" id="stage-caption">玩家 ZL9：放大头部后的主角模型</div>
+        </section>
+    </main>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module" src="./scripts/exhibition/main.js"></script>
+</body>
+</html>

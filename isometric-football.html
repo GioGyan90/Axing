@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Isometric Football - Three.js AI 守门员</title>
+    <link rel="stylesheet" href="./styles/isometric-football.css">
+</head>
+<body>
+    <main id="game-root" aria-label="Three.js isometric football mini game"></main>
+
+    <aside class="portrait-card panel" aria-label="左上角人像模型展示">
+        <div id="portrait-root"></div>
+    </aside>
+
+    <section class="hud" aria-label="游戏状态和操作说明">
+        <div class="score-card panel">
+            <div class="score-title">
+                <h1>等距足球挑战</h1>
+                <span class="tag">AI 守门员</span>
+            </div>
+            <div class="score-board" aria-label="五次机会积分表">
+                <div class="score-board__meta">
+                    <strong><span id="player-score">0</span>/3 球获胜</strong>
+                    <span>失败 <span id="keeper-score">0</span>+<span id="out-score">0</span>/3</span>
+                </div>
+                <ol class="attempt-track" id="attempt-track" aria-label="每次机会是否得分">
+                    <li class="attempt-cell pending" aria-label="第 1 次机会待定">1</li>
+                    <li class="attempt-cell pending" aria-label="第 2 次机会待定">2</li>
+                    <li class="attempt-cell pending" aria-label="第 3 次机会待定">3</li>
+                    <li class="attempt-cell pending" aria-label="第 4 次机会待定">4</li>
+                    <li class="attempt-cell pending" aria-label="第 5 次机会待定">5</li>
+                </ol>
+            </div>
+            <p class="hint">
+                <span class="desktop">WASD / 方向键移动，鼠标瞄准；按住 Space 蓄力，靠近球可射门，靠近门将可蓄力踢倒他。</span>
+                共 5 次机会，踢进 3 球获胜；射门失败累计 3 次马上失败。主裁判的深绿色视野内踢人会被警告并记一次失败。
+            </p>
+        </div>
+        <div class="actions">
+            <label class="keeper-control panel" for="keeper-level">门将 AI
+                <select id="keeper-level" aria-label="选择守门员 AI 等级">
+                    <option value="1" selected>等级 1</option>
+                    <option value="2">等级 2</option>
+                    <option value="3">等级 3</option>
+                </select>
+            </label>
+            <button class="btn primary" id="restart-btn">重新开球</button>
+            <a class="btn" href="./index.html">返回首页</a>
+        </div>
+    </section>
+
+    <div class="toast" id="toast">开球！</div>
+    <div class="keeper-bubble" id="keeper-bubble" aria-live="polite"></div>
+
+    <div class="result-overlay" id="result-overlay" aria-live="assertive" aria-hidden="true">
+        <canvas class="confetti-canvas" id="confetti-canvas" aria-hidden="true"></canvas>
+        <div class="result-card panel" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <p class="result-kicker">比赛结束</p>
+            <h2 id="result-title">游戏结果</h2>
+            <p id="result-summary">准备再来一局。</p>
+            <button class="btn primary" id="replay-btn">重玩一局</button>
+        </div>
+    </div>
+
+    <section class="mobile-pad" aria-label="移动端触摸控制">
+        <div class="dpad">
+            <button class="pad-btn up" data-key="KeyW">▲</button>
+            <button class="pad-btn left" data-key="KeyA">◀</button>
+            <button class="pad-btn right" data-key="KeyD">▶</button>
+            <button class="pad-btn down" data-key="KeyS">▼</button>
+        </div>
+        <button class="kick" data-key="Space">蓄力</button>
+    </section>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module" src="./scripts/game/main.js"></script>
+</body>
+</html>

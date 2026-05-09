@@ -1,0 +1,129 @@
+:root {
+    --primary-color: #4facfe;
+    --secondary-color: #00f2fe;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.12);
+}
+
+body, html {
+    margin: 0; padding: 0;
+    font-family: 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: #0a0a0a; color: white;
+    overflow: hidden; touch-action: manipulation;
+}
+
+/* 弹幕层 */
+#barrage-container {
+    position: absolute; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 1; pointer-events: none;
+}
+
+.barrage-item {
+    position: absolute; white-space: nowrap; font-weight: 800;
+    will-change: transform; z-index: 1;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2), 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+/* 3D 渲染容器 */
+#canvas-container {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10; pointer-events: none;
+}
+
+/* Hero 内容区 */
+.hero {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; width: 100vw;
+    position: relative; z-index: 100; pointer-events: none;
+}
+
+.hero-content {
+    /* PC 默认布局 */
+    transform: translateX(calc(-15% - 200px));
+    max-width: 500px; padding: 40px; border-radius: 32px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    pointer-events: auto;
+    animation: borderGlow 4s infinite alternate;
+}
+
+@keyframes borderGlow {
+    from { border-color: rgba(79, 172, 254, 0.1); }
+    to { border-color: rgba(0, 242, 254, 0.4); }
+}
+
+.hero-content h1 {
+    font-size: 4.5rem; margin: 0 0 10px 0; letter-spacing: -2px;
+    background: linear-gradient(90deg, #fff, var(--primary-color), var(--secondary-color), #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shine 5s linear infinite;
+}
+
+@keyframes shine { to { background-position: 200% center; } }
+
+.hero-content p {
+    font-size: 1.2rem; line-height: 1.6; color: rgba(255,255,255,0.85);
+    margin-bottom: 25px; font-weight: 500;
+}
+
+.barrage-control {
+    display: flex; gap: 10px; background: rgba(0,0,0,0.5);
+    padding: 6px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.15);
+}
+
+#barrage-input {
+    flex: 1; border: none; background: transparent;
+    color: white; padding-left: 12px; outline: none; font-size: 1rem; width: 100px;
+}
+
+#send-btn {
+    padding: 10px 20px; border-radius: 30px; border: none;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white; cursor: pointer; font-weight: bold;
+}
+
+.home-links {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px;
+}
+
+.home-link {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px; border-radius: 999px;
+    color: #08111f; text-decoration: none; font-weight: 900;
+    background: linear-gradient(135deg, #faff6b, #55ffbf 45%, var(--secondary-color));
+    box-shadow: 0 12px 30px rgba(0, 242, 254, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gallery-link {
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.home-link:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 16px 38px rgba(0, 242, 254, 0.35);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .hero-content {
+        transform: translateX(0) translateY(200px);
+        width: 85%;
+        padding: 25px;
+        max-width: none;
+    }
+    .hero-content h1 { font-size: 2.5rem; text-align: center; }
+    .hero-content p { font-size: 1rem; text-align: center; }
+}
+
+@keyframes moveBarrage {
+    from { transform: translateX(100vw); }
+    to { transform: translateX(-220%); }
+}

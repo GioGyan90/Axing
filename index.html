@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Hero - H5重心微调版</title>
+    <link rel="stylesheet" href="./styles/home.css">
+</head>
+<body>
+
+    <div id="barrage-container"></div>
+    <div id="canvas-container"></div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>我叫ZL9</h1>
+            <p>用最不堪的语言攻击我最薄弱的地方！</p>
+            <div class="barrage-control">
+                <input type="text" id="barrage-input" placeholder="输入攻击弹幕..." maxlength="15">
+                <button id="send-btn">发送</button>
+            </div>
+            <div class="home-links">
+                <a class="home-link game-link" href="./isometric-football.html" aria-label="进入 Three.js 等距足球小游戏">
+                    ⚽ 进入等距足球小游戏
+                </a>
+                <a class="home-link gallery-link" href="./exhibition.html" aria-label="进入 ZL9 模型展览馆">
+                    🏛️ 进入模型展览馆
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module" src="./scripts/home/main.js"></script>
+</body>
+</html>

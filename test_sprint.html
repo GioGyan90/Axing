@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>Sprint Progress Test</title></head>
+<body>
+<h1>Sprint Progress Logic Test</h1>
+<div id="output"></div>
+<script>
+const sprintSegments = 32;
+const sprintDuration = 5.0;
+
+// Simulate different sprint elapsed times
+const testCases = [0, 1, 2.5, 4, 4.9, 5.0];
+
+let output = '<table border="1"><tr><th>Elapsed</th><th>sprintProgress</th><th>Arcs Visible (count)</th></tr>';
+
+for (const elapsed of testCases) {
+    const sprintRemaining = Math.max(0, sprintDuration - elapsed);
+    const sprintProgress = sprintRemaining / sprintDuration;
+    
+    let visibleCount = 0;
+    for (let i = 0; i < sprintSegments; i++) {
+        const segmentThreshold = (i + 1) / sprintSegments;
+        // Current logic: show if sprintProgress >= segmentThreshold
+        if (sprintProgress >= segmentThreshold) {
+            visibleCount++;
+        }
+    }
+    output += `<tr><td>${elapsed}s</td><td>${sprintProgress.toFixed(2)}</td><td>${visibleCount}/${sprintSegments}</td></tr>`;
+}
+output += '</table>';
+
+output += '<h2>Problem Analysis:</h2>';
+output += '<p>When sprint starts (elapsed=0), sprintProgress=1.0, all 32 arcs should be visible.</p>';
+output += '<p>When sprint ends (elapsed=5), sprintProgress=0.0, no arcs should be visible.</p>';
+output += '<p>The current logic IS correct for showing decreasing bars as sprint depletes.</p>';
+output += '<p>BUT the issue might be that isSprinting is not being set correctly, or the bar is not visible due to other reasons.</p>';
+
+document.getElementById('output').innerHTML = output;
+</script>
+</body>
+</html>
