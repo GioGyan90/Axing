@@ -648,8 +648,9 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         const rightForearmBend = punchPhase > 0.5 ? (punchPhase - 0.5) * 2.5 : 0;
         pose.rightArm.knee.rotation.x = rightForearmBend;
         
-        // Left arm: balances by going opposite direction (forward rotation)
-        const leftArmAngle = 0.2 - punchPhase * Math.PI;
+        // Left arm: rotates fully forward from shoulder joint (same direction as right arm for punching)
+        // Start: hanging down (~-0.2), End: fully rotated forward (Math.PI - 0.2 ≈ 2.94)
+        const leftArmAngle = -0.2 + punchPhase * Math.PI;
         setArmPose(pose.leftArm, leftArmAngle, 0.2, 0);
         
         // Left forearm: slight bend for balance
