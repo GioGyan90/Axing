@@ -586,7 +586,7 @@ function createVoxelLimbSegment(radius, length, material) {
     return segment;
 }
 
-export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, isSprinting = false, isDribbling = false } = {}) {
+export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, punching = false, punchProgress = 0, isSprinting = false, isDribbling = false } = {}) {
     const pose = character.userData.pose;
     if (!pose) return;
 
@@ -618,6 +618,35 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
         setArmPose(pose.rightArm, -1.05 * fall, 0.18, -0.68 * fall);
         setLegPose(pose.leftLeg, 0.34 * fall, 0.22, -0.28 * fall);
         setLegPose(pose.rightLeg, -0.42 * fall, 0.18, 0.3 * fall);
+        return;
+    }
+    
+    // Punch save animation: goalkeeper jumps up with fist raised to hit high ball
+    if (punching) {
+        const punch = THREE.MathUtils.clamp(punchProgress, 0, 1);
+        const punchPhase = Math.sin(punch * Math.PI);
+        
+        // Body jumps up and extends
+        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.25 * punchPhase;
+        pose.visualRoot.rotation.z = 0.15 * punchPhase;  // Slight body tilt
+        pose.visualRoot.rotation.x = -0.2 * punchPhase;
+        
+        pose.body.position.y = bodyY + 0.15 * punchPhase;
+        pose.body.rotation.set(-0.15 * punchPhase, 0, 0.3 * punchPhase);
+        
+        // Head looks up at the ball
+        pose.head.position.y = headY + 0.1 * punchPhase;
+        pose.head.rotation.set(-0.3 * punchPhase, 0, 0.15 * punchPhase);
+        
+        // Right arm raised high with fist (punching motion), left arm balanced
+        setArmPose(pose.leftArm, 1.8 * punchPhase, 0.25, 1.4 * punchPhase);  // Left arm up for balance
+        setArmPose(pose.rightArm, -2.3 * punchPhase, 0.15, -1.8 * punchPhase);  // Right arm punching up
+        
+        // Legs: one leg bent, one extended for jump power
+        setLegPose(pose.leftLeg, -0.8 * punchPhase, 1.1 * punchPhase, -0.3 * punchPhase);
+        setLegPose(pose.rightLeg, -0.6 * punchPhase, 0.9 * punchPhase, 0.3 * punchPhase);
+        
+        updatePlayerNameTagFlash(pose, elapsedTime, punchPhase);
         return;
     }
     

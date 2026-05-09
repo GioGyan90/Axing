@@ -3,9 +3,12 @@ import { BALL_GROUND_Y, BALL_RADIUS, FIELD, KEEPER_PROFILES } from './config.js'
 import { flashCharacterHit, updateCharacterPose } from './assets.js';
 import { kickBall, kickDownKeeper } from './kicking.js';
 import { updateDribbling } from './dribbling.js';
+import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, KEEPER_STATE as PUNCH_STATE } from './goalkeeper.js';
 
 // 重新导出 kicking.js 中的函数，供 main.js 使用
 export { kickBall, kickDownKeeper };
+// 重新导出 goalkeeper.js 中的函数和状态
+export { checkHighBallPunch, performHighBallPunch, updatePunchAnimation };
 
 export const MAX_ATTEMPTS = 5;
 export const GOALS_TO_WIN = 3;
@@ -554,12 +557,17 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
         }
     }
     
-    // IDLE、CHARGE、RETURN 状态的常规处理
+    // IDLE、CHARGE、RETURN、PUNCH 状态的常规处理
     if (state.keeperState === KEEPER_STATE.DIVE) {
         state.keeperState = KEEPER_STATE.IDLE;
     }
     if (state.keeperState === KEEPER_STATE.KNOCKED) {
         state.keeperState = KEEPER_STATE.IDLE;
+    }
+    if (state.keeperState === KEEPER_STATE.PUNCH) {
+        // PUNCH 状态由专门的动画函数处理，不进入常规逻辑
+        updatePunchAnimation({ dt, state, keeper, elapsedTime });
+        return;
     }
 
     const homePosition = getKeeperHomePosition(profile, state, ball);
@@ -628,7 +636,15 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
         return;
     }
     
-    // 扇形视野检测与预判逻辑
+    // 高球抬手击球检测（优先级高于地面扑救）
+    const canPunchHighBall = checkHighBallPunch(keeper, ball, state.ballVelocity, profile, elapsedTime, state.lastKeeperSaveTime, state.keeperGetUpUntil, state.isResetting);
+    
+    if (canPunchHighBall) {
+        performHighBallPunch({ state, keeper, ball, elapsedTime, onKeeperSave, profile });
+        return;
+    }
+    
+    // 扇形视野检测与预判逻辑（地面扑救）
     const canPredictSave = checkKeeperVisionAndSector(keeper, ball, state.ballVelocity, profile, elapsedTime, state.lastKeeperSaveTime, state.keeperGetUpUntil, state.isResetting);
     
     if (canPredictSave) {
