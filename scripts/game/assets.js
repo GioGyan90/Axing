@@ -493,7 +493,7 @@ export function updateCharacterPose(character, { dt, elapsedTime, movement = cha
 
     if (kicking) {
         const charge = THREE.MathUtils.clamp(kickPower, 0.2, 1);
-        if (kickPhase === 'release') {
+        if (kickPhase === 'charge') {
             const progress = THREE.MathUtils.clamp(kickProgress, 0, 1);
             const swing = Math.sin(progress * Math.PI * 0.5);
             const landing = Math.sin(progress * Math.PI);
