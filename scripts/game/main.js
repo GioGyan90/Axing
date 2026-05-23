@@ -34,6 +34,7 @@ import {
     updatePlayer,
     updateReferee,
     saveMatchRecord,
+    getMatchRecords,
 } from './rules.js';
 import {
     bindKeeperLevel,
@@ -166,6 +167,23 @@ bindRestart(elements.replayBtn, () => {
 bindRecordsButton(elements.recordsBtn, () => {
     showRecordsModal(elements);
 });
+// 绑定关闭战绩弹窗按钮
+if (elements.closeRecordsBtn) {
+    elements.closeRecordsBtn.addEventListener('click', () => {
+        hideRecordsModal(elements);
+    });
+}
+// 点击弹窗背景关闭
+if (elements.recordsModal) {
+    elements.recordsModal.addEventListener('click', (event) => {
+        if (event.target === elements.recordsModal) {
+            hideRecordsModal(elements);
+        }
+    });
+}
+
+// 将 getMatchRecords 函数挂载到 window 对象，供 UI 使用
+window.getMatchRecords = getMatchRecords;
 
 window.addEventListener('resize', resize);
 resize();
