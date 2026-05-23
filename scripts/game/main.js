@@ -33,6 +33,7 @@ import {
     updateKeeper,
     updatePlayer,
     updateReferee,
+    saveMatchRecord,
 } from './rules.js';
 import {
     bindKeeperLevel,
@@ -47,6 +48,8 @@ import {
     showMessage,
     showResultOverlay,
     updateScoreBoard,
+    bindRecordsButton,
+    showRecordsModal,
 } from './ui.js';
 
 const elements = getGameElements();
@@ -160,6 +163,9 @@ bindRestart(elements.replayBtn, () => {
     ensureAudioContext();
     startNewGame('再战一局！');
 });
+bindRecordsButton(elements.recordsBtn, () => {
+    showRecordsModal(elements);
+});
 
 window.addEventListener('resize', resize);
 resize();
@@ -236,6 +242,10 @@ function endGame({ outcome, reason }) {
     hideKeeperBubble();
     cancelKickCharge(state);
     state.ballVelocity.set(0, 0, 0);
+    
+    // 保存战绩记录（仅对登录用户）
+    saveMatchRecord(state, state.keeperLevel);
+    
     const won = outcome === 'win';
     const loseReason = {
         save: '射门失败 3 次。',
