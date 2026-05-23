@@ -182,6 +182,9 @@ html, body {
     position: relative; z-index: 1; width: min(680px, calc(100vw - 48px)); 
     padding: 24px; transform: translateY(12px) scale(0.96); transition: transform .35s ease;
     max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 22px;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.36);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
 }
 .records-modal.show .records-card { transform: translateY(0) scale(1); }
 
