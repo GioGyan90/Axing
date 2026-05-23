@@ -3,6 +3,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HOME_MODEL_URL } from './assets.js';
 
 let scene, camera, renderer, model, playerModel;
+let mixer = null;
+let clock = new THREE.Clock();
+let animations = [];
 let mouseX = 0, mouseY = 0;
 
 const getIsMobile = () => window.innerWidth <= 768;
@@ -29,6 +32,15 @@ function init3D() {
         model = gltf.scene;
         updateModelLayout();
         scene.add(model);
+        
+        // 处理动画
+        if (gltf.animations && gltf.animations.length > 0) {
+            animations = gltf.animations;
+            mixer = new THREE.AnimationMixer(model);
+            // 播放第一个动画
+            const action = mixer.clipAction(animations[0]);
+            action.play();
+        }
         
         // 加载球员模型
         loadPlayerModel(loader);
@@ -105,6 +117,13 @@ function loadPlayerModel(loader) {
 
 function animate() {
     requestAnimationFrame(animate);
+    
+    // 更新动画混合器
+    if (mixer) {
+        const delta = clock.getDelta();
+        mixer.update(delta);
+    }
+    
     if (model) {
         model.rotation.y += 0.005;
         model.rotation.x += (mouseY * 0.1 - model.rotation.x) * 0.05;
