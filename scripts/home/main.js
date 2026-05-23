@@ -142,7 +142,41 @@ const bContainer = document.getElementById('barrage-container');
 const input = document.getElementById('barrage-input');
 const btn = document.getElementById('send-btn');
 const STORAGE_KEY = 'axing_final_v6';
-let barragePool = JSON.parse(localStorage.getItem(STORAGE_KEY) || '["不够不堪！", "三鲜伊面天下第一", "细节拉满了", "阿性你真行"]');
+const BARRAGE_FILE_URL = './barrages.json';
+let barragePool = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+// 从仓库文件加载历史弹幕
+async function loadBarragesFromFile() {
+    try {
+        const response = await fetch(BARRAGE_FILE_URL);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.barrages && Array.isArray(data.barrages)) {
+                // 合并文件中的弹幕到本地池（去重）
+                data.barrages.forEach(text => {
+                    if (!barragePool.includes(text)) {
+                        barragePool.push(text);
+                    }
+                });
+                console.log(`已从文件加载 ${data.barrages.length} 条历史弹幕`);
+            }
+        }
+    } catch (error) {
+        console.warn('无法加载弹幕文件，使用本地存储:', error);
+    }
+}
+
+// 保存新弹幕到仓库文件（通过 localStorage 同步模拟）
+function saveBarrageToFile(newText) {
+    if (!barragePool.includes(newText)) {
+        barragePool.push(newText);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(barragePool));
+        
+        // 注意：由于浏览器安全限制，纯前端无法直接写入文件
+        // 实际部署时需要后端 API 支持，这里仅做本地持久化
+        console.log(`新弹幕 "${newText}" 已保存到本地，需后端支持才能写入 barrages.json`);
+    }
+}
 
 function createBarrage(text) {
     const isMobile = getIsMobile();
@@ -170,14 +204,15 @@ function handleSend() {
     const t = input.value.trim();
     if (t) {
         createBarrage(t);
-        if (!barragePool.includes(t)) {
-            barragePool.push(t);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(barragePool));
-        }
+        saveBarrageToFile(t);
         input.value = '';
     }
 }
 
+// 初始化：加载历史弹幕
+loadBarragesFromFile().then(() => {
+    startLoop();
+});
+
 btn.addEventListener('click', handleSend);
 input.addEventListener('keypress', (e) => e.key === 'Enter' && handleSend());
-startLoop();
