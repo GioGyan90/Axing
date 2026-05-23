@@ -11,7 +11,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 1000;
+            z-index: 10000;
+            pointer-events: auto;
         }
 
         .auth-btn {
@@ -24,6 +25,7 @@
             font-weight: bold;
             font-size: 0.9rem;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            pointer-events: auto;
         }
 
         .auth-btn:hover {
@@ -40,6 +42,8 @@
             background: rgba(255, 255, 255, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(10px);
+            pointer-events: auto;
+            z-index: 10001;
         }
 
         .user-name {
@@ -73,15 +77,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 20000;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
         }
 
         .modal-overlay.active {
             opacity: 1;
             visibility: visible;
+            pointer-events: auto;
         }
 
         .modal-content {
@@ -95,6 +101,8 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             transform: scale(0.9);
             transition: transform 0.3s ease;
+            pointer-events: auto;
+            z-index: 20001;
         }
 
         .modal-overlay.active .modal-content {
