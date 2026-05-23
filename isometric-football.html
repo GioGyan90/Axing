@@ -46,6 +46,7 @@
                 </select>
             </label>
             <button class="btn primary" id="restart-btn">重新开球</button>
+            <button class="btn" id="records-btn">查看战绩</button>
             <a class="btn" href="./index.html">返回首页</a>
         </div>
     </section>
@@ -60,6 +61,19 @@
             <h2 id="result-title">游戏结果</h2>
             <p id="result-summary">准备再来一局。</p>
             <button class="btn primary" id="replay-btn">重玩一局</button>
+        </div>
+    </div>
+
+    <!-- 战绩记录弹窗 -->
+    <div class="records-modal" id="records-modal" aria-hidden="true">
+        <div class="records-card panel">
+            <div class="records-header">
+                <h2>近 5 局战绩</h2>
+                <button class="close-btn" id="close-records-btn">×</button>
+            </div>
+            <div class="records-body" id="records-content">
+                <!-- 战绩表格将动态插入 -->
+            </div>
         </div>
     </div>
 

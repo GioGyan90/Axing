@@ -18,6 +18,10 @@ export function getGameElements() {
         restartBtn: document.getElementById('restart-btn'),
         toast: document.getElementById('toast'),
         keeperBubble: document.getElementById('keeper-bubble'),
+        recordsBtn: document.getElementById('records-btn'),
+        recordsModal: document.getElementById('records-modal'),
+        recordsContent: document.getElementById('records-content'),
+        closeRecordsBtn: document.getElementById('close-records-btn'),
     };
 }
 
@@ -185,6 +189,58 @@ export function bindKeeperLevel(select, onChange) {
 
 export function bindRestart(button, onRestart) {
     button.addEventListener('click', onRestart);
+}
+
+export function bindRecordsButton(button, onShowRecords) {
+    if (!button) return;
+    button.addEventListener('click', onShowRecords);
+}
+
+export function showRecordsModal(elements) {
+    const { recordsModal, recordsContent } = elements;
+    if (!recordsModal || !recordsContent) return;
+    
+    // 获取战绩记录
+    const records = window.getMatchRecords ? window.getMatchRecords() : [];
+    
+    if (records.length === 0) {
+        recordsContent.innerHTML = '<p class="no-records">暂无战绩记录，请先进行游戏！</p>';
+    } else {
+        let html = '<table class="records-table"><thead><tr><th>时间</th><th>难度</th><th>结果</th><th>5 球得分</th></tr></thead><tbody>';
+        records.forEach(record => {
+            const date = new Date(record.timestamp);
+            const timeStr = date.toLocaleString('zh-CN', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const resultText = record.won ? '胜利' : '失败';
+            const resultClass = record.won ? 'win' : 'lose';
+            const ballScoresHtml = record.ballScores
+                .map(score => score === 1 ? '●' : (score === 0 ? '×' : '-'))
+                .join(' ');
+            
+            html += `<tr class="record-row ${resultClass}">
+                <td>${timeStr}</td>
+                <td>等级${record.difficulty}</td>
+                <td class="result-${resultClass}">${resultText}</td>
+                <td class="ball-scores">${ballScoresHtml}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        recordsContent.innerHTML = html;
+    }
+    
+    recordsModal.classList.add('show');
+    recordsModal.removeAttribute('aria-hidden');
+}
+
+export function hideRecordsModal(elements) {
+    const { recordsModal } = elements;
+    if (!recordsModal) return;
+    recordsModal.classList.remove('show');
+    recordsModal.setAttribute('aria-hidden', 'true');
 }
 
 export function createPointerAim(camera) {

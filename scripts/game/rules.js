@@ -175,6 +175,66 @@ export function recordAttemptResult(state, result) {
     return null;
 }
 
+// 战绩记录相关常量
+const MATCH_RECORDS_KEY = 'zl9_match_records';
+const MAX_RECORDS = 5;
+
+// 获取当前用户（从 authManager）
+function getCurrentUser() {
+    if (window.authManager && window.authManager.isLoggedIn()) {
+        return window.authManager.getUsername();
+    }
+    return null;
+}
+
+// 保存战绩记录
+export function saveMatchRecord(state, keeperLevel) {
+    const username = getCurrentUser();
+    if (!username) return; // 未登录不保存
+    
+    const now = new Date();
+    const ballScores = state.attempts.map((result, index) => {
+        if (result === 'goal') return 1;
+        if (result === 'save' || result === 'out' || result === 'foul') return 0;
+        return null; // 未完成的局
+    });
+    
+    // 只保存已完成的局（至少有结果）
+    const completedCount = ballScores.filter(s => s !== null).length;
+    if (completedCount === 0) return;
+    
+    const record = {
+        timestamp: now.toISOString(),
+        difficulty: keeperLevel,
+        ballScores: ballScores,
+        won: state.playerScore >= GOALS_TO_WIN,
+    };
+    
+    // 获取现有记录
+    const userRecordsKey = `${MATCH_RECORDS_KEY}_${username}`;
+    let records = JSON.parse(localStorage.getItem(userRecordsKey) || '[]');
+    
+    // 添加新记录到开头
+    records.unshift(record);
+    
+    // 只保留最近 5 局
+    if (records.length > MAX_RECORDS) {
+        records = records.slice(0, MAX_RECORDS);
+    }
+    
+    // 保存回 localStorage
+    localStorage.setItem(userRecordsKey, JSON.stringify(records));
+}
+
+// 获取战绩记录
+export function getMatchRecords() {
+    const username = getCurrentUser();
+    if (!username) return [];
+    
+    const userRecordsKey = `${MATCH_RECORDS_KEY}_${username}`;
+    return JSON.parse(localStorage.getItem(userRecordsKey) || '[]');
+}
+
 export function updateChargePower(state, elapsedTime) {
     if (!state.isChargingKick || state.gameOver) return;
     state.chargePower = THREE.MathUtils.clamp((elapsedTime - state.chargeStartTime) / 0.675, 0.18, 1);
