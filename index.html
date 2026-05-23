@@ -259,7 +259,7 @@
         }
     </style>
 </head>
-<body>
+<body style="position: relative; min-height: 100vh;">
 
     <!-- 用户认证区域 -->
     <div id="auth-container" class="auth-container"></div>
@@ -326,7 +326,10 @@
     <script type="module" src="./scripts/home/main.js"></script>
     <script type="module">
         // 用户认证 UI 逻辑
-        import { AuthManager } from './scripts/home/auth.js';
+        import { authManager } from './scripts/home/auth.js';
+
+        // 将 authManager 挂载到 window 以便全局访问
+        window.authManager = authManager;
 
         const authContainer = document.getElementById('auth-container');
         const authModal = document.getElementById('auth-modal');
@@ -345,7 +348,7 @@
 
         // 初始化用户状态
         function initAuthUI() {
-            if (window.authManager && window.authManager.isLoggedIn()) {
+            if (authManager && authManager.isLoggedIn()) {
                 showUserInfo();
             } else {
                 showLoginButton();
@@ -362,7 +365,7 @@
 
         // 显示用户信息
         function showUserInfo() {
-            const username = window.authManager.getUsername();
+            const username = authManager.getUsername();
             authContainer.innerHTML = `
                 <div class="user-info">
                     <span class="user-name">👤 ${username}</span>
@@ -370,7 +373,7 @@
                 </div>
             `;
             document.getElementById('logout-btn').addEventListener('click', () => {
-                window.authManager.logout();
+                authManager.logout();
                 initAuthUI();
             });
         }
@@ -418,9 +421,9 @@
 
             let result;
             if (isLoginMode) {
-                result = window.authManager.login(username, password);
+                result = authManager.login(username, password);
             } else {
-                result = window.authManager.register(username, password);
+                result = authManager.register(username, password);
             }
 
             if (result.success) {
@@ -455,7 +458,7 @@
 
         // GitHub 同步按钮（可选功能）
         githubSyncBtn.addEventListener('click', async () => {
-            if (!window.authManager.isLoggedIn()) return;
+            if (!authManager.isLoggedIn()) return;
 
             const token = prompt('请输入您的 GitHub Personal Access Token:');
             if (!token) return;
@@ -468,8 +471,8 @@
 
             githubSyncBtn.textContent = '⏳ 同步中...';
             
-            const result = await window.authManager.syncToGitHub(
-                window.authManager.currentUser,
+            const result = await authManager.syncToGitHub(
+                authManager.currentUser,
                 { token, owner, repo }
             );
 
