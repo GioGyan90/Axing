@@ -1,0 +1,47 @@
+prompt2rig
+Copyright 2026 blendi-remade
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Portions of hq/worker.py (the SMPL joint computation in `leg_length`) are adapted from
+Motion2MixamoRig (https://github.com/MaxLiu22/Motion2MixamoRig), Copyright its authors,
+licensed under the Apache License, Version 2.0.
+
+The universal-modder logos in public/brand and docs/media are the brand assets of universal-modder,
+used here by the universal-modder team. The fonts in public/brand/fonts (Geist Pixel, Instrument Sans,
+Sometype Mono) are licensed under the SIL Open Font License 1.1; their license files sit next to them.
+
+The upstream distribution does not bundle third-party character models. This experimental fork adds
+the separately licensed character assets listed below. Other runtime components retain their own
+licenses, including some that are NON-COMMERCIAL or copyleft:
+
+  - GVHMR (zju3dv) and the `gvhmr` package: educational, research and non-profit use only.
+  - SMPL-X body model (MPI-IS): non-commercial license; obtained separately by each user.
+  - Ultralytics YOLO: AGPL-3.0.
+  - MediaPipe Pose: Apache-2.0. three.js: MIT.
+  - X Bot, Michelle and Soldier characters: Adobe Mixamo terms (loaded from the three.js examples CDN).
+  - Video and image models (MiniMax H3 Max Turbo, FLUX 3 Max, FLUX.1 schnell) via fal: fal's and each
+    model provider's terms.
+
+See the "License" section of README.md for what this means for commercial use.
+
+Lucky Break Motion Lab additions (2026): browser GLB optimization, motion-plan v1,
+API configuration, and static GitHub Pages player. Additional bundled libraries:
+  - meshoptimizer 0.24.0, Copyright Arseny Kapoulkine, MIT (public/vendor/meshopt/LICENSE.md).
+  - Draco WebAssembly decoder distributed with three.js r169, Copyright Google,
+    Apache-2.0 (public/vendor/draco/LICENSE).
+These modules do not include the non-commercial HQ model weights listed above.
+
+Bundled Motion Lab character assets have separate provenance and licenses:
+  - CharaBuilder boy: pixiv VRoid CC0 sample assets and Micket CC0 hairstyle;
+    see public/lab/characters/teen-boy/SOURCES.md.
+  - Business Man, Ultimate Modular Men Pack, by Quaternius, CC0-1.0;
+    see public/lab/characters/suit-man/SOURCES.md for the exact asset license,
+    pinned source file, hash, and adaptation scope.
+  - Adult running woman: Quaternius Universal Base Characters Standard, CC0-1.0;
+    see public/lab/characters/running-woman/SOURCES.md.
+  - Anime bob woman: the same adult body and project-authored sportswear, plus
+    pixiv VRoid Project beta HairSample_Female head and Sendagaya Shibu hair,
+    CC0-1.0; see public/lab/characters/anime-bob-woman/SOURCES.md for exact versions,
+    official license evidence, hashes and adaptation scope.
+These character additions do not include the non-commercial HQ model weights.

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Axing · 足球动作检查</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf1eb;color:#20394b;font:15px system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:22px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}h1{font-size:25px;margin:0 0 6px}p{margin:0 0 14px;color:#526b71}a{color:#286579}section{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0;align-items:center}button,select{background:white;border:1px solid #c1d1cb;border-radius:9px;padding:9px 13px;color:inherit;font:inherit;cursor:pointer}button[aria-pressed=true],#play{background:#176f65;color:white;border-color:#176f65}label{display:flex;gap:10px;align-items:center}#stage{border:1px solid #c9d6cb;border-radius:14px;overflow:hidden;position:relative;background:#e9eee5}canvas{display:block;width:100%;height:auto}#status{font-size:13px;background:#dfe9df;padding:10px 14px;margin:0}input{flex:1;min-width:100px}output{font-variant-numeric:tabular-nums}small{color:#526b71}#phases button{font-size:13px}#error{color:#a13232}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body><main>
+<header><div><h1>足球动作检查</h1><p>原游戏人物 · 踢球、左右横扑、高球解围</p></div><a href="./isometric-football.html">进入小游戏 →</a></header>
+<section><label>动作 <select id="motion" aria-label="动作"><option value="kick">右脚射门</option><option value="diveLeft">向左横扑</option><option value="diveRight">向右横扑</option><option value="punch">高球双拳解围</option><option value="scoop">中路低球封堵</option></select></label><button id="play">播放</button><label>速度 <select id="speed" aria-label="播放速度"><option value="0.35">0.35×</option><option value="0.7" selected>0.7×</option><option value="1">1×</option></select></label></section>
+<section id="views" aria-label="观察视角"><button data-view="front">正面</button><button data-view="side">侧面</button><button data-view="back">背面</button><button data-view="three" aria-pressed="true">四分之三</button><button data-view="topFront">斜前俯视</button><button data-view="topBack">斜后俯视</button></section>
+<div id="stage" aria-label="实际人物动作预览"></div><p id="status" aria-live="polite">正在载入人物…</p>
+<section><label for="time">时间</label><input id="time" type="range" min="0" max="1.3" step="0.01" value="0.52" aria-label="动作时间"><output id="time-value">0.52 s</output></section>
+<section id="phases" aria-label="动作关键阶段"></section>
+<section><strong>游戏触球验证</strong><button data-test="left">左侧低球</button><button data-test="right">右侧低球</button><button data-test="high">中路高球</button><button data-test="center">中路低球</button><button data-test="shot">射门触球</button><small>使用小游戏实际运动与碰撞逻辑</small></section>
+<p id="test-result" aria-live="polite">选择测试，检查触球前后足球的反应。</p><p id="error" role="alert"></p>
+</main><script type="module" src="./scripts/review/main.js"></script></body></html>

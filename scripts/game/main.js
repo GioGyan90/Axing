@@ -51,6 +51,7 @@ import {
     updateScoreBoard,
     bindRecordsButton,
     showRecordsModal,
+    hideRecordsModal,
 } from './ui.js';
 
 const elements = getGameElements();
@@ -130,10 +131,17 @@ const finishAttempt = (result) => {
     };
     resetGame(messages[result]);
 };
-const kickRelease = () => releaseKickCharge(state, clock.elapsedTime, (power) => {
-    if (kickDownKeeper({ ...keeperKickContext, elapsedTime: clock.elapsedTime }, power)) return true;
-    return kickBall(kickContext, power);
-});
+const kickRelease = () => {
+    state.kickDirection.copy(getAimDirection()).normalize();
+    state.kickTargetIsKeeper = player.position.distanceTo(keeper.position) < 1.05;
+    if (state.kickTargetIsKeeper) {
+        state.kickDirection.copy(keeper.position).sub(player.position).setY(0).normalize();
+    }
+    return releaseKickCharge(state, clock.elapsedTime, (power) => {
+        if (kickDownKeeper({ ...keeperKickContext, elapsedTime: clock.elapsedTime }, power)) return true;
+        return kickBall({...kickContext, getAimDirection: () => state.kickDirection}, power);
+    });
+};
 const kickStart = () => {
     ensureAudioContext();
     startKickCharge(state, clock.elapsedTime);
@@ -259,6 +267,8 @@ function resize() {
 function endGame({ outcome, reason }) {
     hideKeeperBubble();
     cancelKickCharge(state);
+    state.kickAction = null;
+    state.keeperSave = null;
     state.ballVelocity.set(0, 0, 0);
     
     // 保存战绩记录（仅对登录用户）

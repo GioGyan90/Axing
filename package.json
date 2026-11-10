@@ -1,0 +1,9 @@
+{
+  "name": "axing-football",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-loader ./tools/three-loader.mjs --test tests/*.test.mjs",
+    "build:motions": "node --experimental-loader ./tools/three-loader.mjs tools/build-football-motions.mjs"
+  }
+}

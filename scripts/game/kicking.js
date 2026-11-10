@@ -48,7 +48,6 @@ export function kickBall({ state, player, ball, getAimDirection, showMessage }, 
 export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, showMessage, onKeeperTaunt, onKeeperHit, onRefereeFoul }, powerRatio = 0.35) {
     const KEEPER_MIN_KNOCKDOWN_DURATION = 3;
     const KEEPER_MAX_KNOCKDOWN_DURATION = 5;
-    const KICK_RELEASE_DURATION = 0.46;
     const REFEREE_WARNING_DURATION = 1;
     
     const KEEPER_TAUNTS = [
@@ -116,9 +115,7 @@ export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, sh
     state.keeperGetUpUntil = state.keeperDownUntil + 0.6;
     state.keeperChargeUntil = state.keeperGetUpUntil + 0.45;
     state.lastKeeperKnockdownTime = elapsedTime;
-    state.kickPoseTimer = KICK_RELEASE_DURATION;
-    state.kickPoseDuration = KICK_RELEASE_DURATION;
-    state.kickPosePower = powerRatio;
+    state.keeperSave = null;
     
     // 触发击打效果
     if (onKeeperHit) onKeeperHit(powerRatio);

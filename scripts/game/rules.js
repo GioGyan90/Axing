@@ -5,7 +5,8 @@ import { updatePlayerAnimation } from './player-animation.js';
 import { updateGoalkeeperAnimation } from './goalkeeper-animation.js';
 import { kickBall, kickDownKeeper } from './kicking.js';
 import { updateDribbling } from './dribbling.js';
-import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, KEEPER_STATE as PUNCH_STATE } from './goalkeeper.js';
+import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, predictKeeperSave, beginKeeperSave, updateKeeperSave, KEEPER_STATE } from './goalkeeper.js';
+import { MOTION_TIMING } from './football-motion.js';
 
 // 重新导出 kicking.js 中的函数，供 main.js 使用
 export { kickBall, kickDownKeeper };
@@ -18,24 +19,13 @@ export const FAILURES_TO_LOSE = 3;
 const KEEPER_MIN_KNOCKDOWN_DURATION = 3;
 const KEEPER_MAX_KNOCKDOWN_DURATION = 5;
 const KEEPER_GET_UP_DURATION = 0.6;
-const KICK_RELEASE_DURATION = 0.46;
+const KICK_RELEASE_DURATION = 0.68;
 const REFEREE_WARNING_DURATION = 1;
 const REFEREE_PATROL_SPEED = 3.2;
 const REFEREE_VISION_RADIUS = 7.5;
 const REFEREE_VISION_HALF_ANGLE = THREE.MathUtils.degToRad(55);
 
-// 门将状态枚举
-export const KEEPER_STATE = {
-    IDLE: 'idle',           // 空闲站立
-    SQUAT: 'squat',         // 下蹲蓄力
-    JUMP: 'jump',           // 弹跳腾空
-    DIVE: 'dive',           // 倒地伸展
-    LAND: 'land',           // 落地缓冲
-    GET_UP: 'getUp',        // 起身恢复
-    KNOCKED: 'knocked',     // 被击倒
-    CHARGE: 'charge',       // 前冲击球
-    RETURN: 'return',       // 返回位置
-};
+export { KEEPER_STATE };
 const KEEPER_TAUNTS = Object.freeze([
     '靠！你来真的啊？',
     '妈呀，犯规了吧！',
@@ -115,6 +105,11 @@ export function createGameState() {
         kickPoseTimer: 0,
         kickPoseDuration: KICK_RELEASE_DURATION,
         kickPosePower: 0,
+        kickAction: null,
+        kickTargetIsKeeper: false,
+        kickDirection: new THREE.Vector3(0, 0, -1),
+        keeperSave: null,
+        previousBallPosition: null,
         keeperMode: 'guard',
         keeperState: KEEPER_STATE.IDLE, // 门将详细状态机状态
         keeperChargeUntil: 0,
@@ -241,23 +236,24 @@ export function updateChargePower(state, elapsedTime) {
 }
 
 export function startKickCharge(state, elapsedTime) {
-    if (state.gameOver || state.isChargingKick) return false;
+    if (state.gameOver || state.isChargingKick || state.kickAction || state.isResetting) return false;
     state.isChargingKick = true;
     state.chargeStartTime = elapsedTime;
     updateChargePower(state, elapsedTime);
     return true;
 }
 
-export function releaseKickCharge(state, elapsedTime, kickBall) {
-    if (!state.isChargingKick) return false;
+export function releaseKickCharge(state, elapsedTime, fire) {
+    if (!state.isChargingKick || state.kickAction || state.gameOver) return false;
     updateChargePower(state, elapsedTime);
+    const power = state.chargePower;
     state.isChargingKick = false;
-    if (kickBall(state.chargePower)) {
-        state.kickPoseTimer = KICK_RELEASE_DURATION;
-        state.kickPoseDuration = KICK_RELEASE_DURATION;
-        state.kickPosePower = state.chargePower;
-    }
+    state.kickPosePower = power;
+    state.kickPoseDuration = KICK_RELEASE_DURATION;
+    state.kickPoseTimer = KICK_RELEASE_DURATION;
+    state.kickAction = {elapsed: 0, start: MOTION_TIMING.kick.windup * power, power, fire, fired: false};
     state.chargePower = 0;
+    state.isDribbling = false;
     return true;
 }
 
@@ -371,34 +367,52 @@ export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, e
     
     const baseSpeed = 6.1;
     const sprintMultiplier = state.isSprinting ? 1.5 : 1.0;
-    const currentSpeed = baseSpeed * sprintMultiplier;
+    const action = state.kickAction;
+    const currentSpeed = baseSpeed * sprintMultiplier * (action && !action.fired ? 0 : action ? 0.45 : 1);
     
+    if (action) {
+        player.userData.facing.copy(state.kickDirection);
+        player.rotation.y = Math.atan2(state.kickDirection.x, state.kickDirection.z);
+    }
     if (move.lengthSq() > 0) {
         move.normalize();
-        player.userData.facing.copy(move);
-        player.rotation.y = Math.atan2(move.x, move.z);
+        if (!action) {
+            player.userData.facing.copy(move);
+            player.rotation.y = Math.atan2(move.x, move.z);
+        }
     }
     player.userData.velocity.copy(move).multiplyScalar(currentSpeed);
     player.position.addScaledVector(move, currentSpeed * dt);
     player.position.x = THREE.MathUtils.clamp(player.position.x, -FIELD.width / 2 + 0.6, FIELD.width / 2 - 0.6);
     player.position.z = THREE.MathUtils.clamp(player.position.z, -FIELD.depth / 2 + 0.6, FIELD.depth / 2 - 0.7);
-    state.kickPoseTimer = Math.max(0, state.kickPoseTimer - dt);
+    let kickTime;
+    if (action) {
+        action.elapsed = Math.min(KICK_RELEASE_DURATION, action.elapsed + dt);
+        kickTime = THREE.MathUtils.lerp(action.start, MOTION_TIMING.kick.duration, action.elapsed / KICK_RELEASE_DURATION);
+        state.kickPoseTimer = KICK_RELEASE_DURATION - action.elapsed;
+    }
     updateDribbling({ dt, state, keys, player, ball, getAimDirection, elapsedTime });
     updatePlayerAnimation(player, {
-        dt,
-        elapsedTime,
-        movement: player.userData.velocity,
-        kicking: state.isChargingKick || state.kickPoseTimer > 0,
-        kickPower: state.kickPoseTimer > 0 ? state.kickPosePower : state.chargePower,
-        kickPhase: state.kickPoseTimer > 0 ? 'release' : 'charge',
-        kickProgress: state.kickPoseTimer > 0 ? state.kickPoseTimer / Math.max(state.kickPoseDuration, 0.001) : 0,
-        isSprinting: state.isSprinting,
-        isDribbling: state.isDribbling,
+        dt, elapsedTime, movement: player.userData.velocity,
+        kicking: state.isChargingKick || !!action,
+        kickPower: action ? action.power : state.chargePower,
+        kickPhase: action ? 'release' : 'charge', kickTime,
+        ballPosition: action && !action.fired && !state.kickTargetIsKeeper ? ball.getWorldPosition(new THREE.Vector3()) : null,
+        kickDirection: new THREE.Vector3(0, 0, 1).applyQuaternion(player.getWorldQuaternion(new THREE.Quaternion())),
+        isSprinting: state.isSprinting, isDribbling: state.isDribbling,
     });
+    if (action && !action.fired && kickTime >= MOTION_TIMING.kick.contact) {
+        action.fired = true;
+        action.fire(action.power);
+        state.dribbleBreakUntil = elapsedTime + 0.35;
+    }
+    if (action && action.elapsed >= KICK_RELEASE_DURATION) state.kickAction = null;
 
 }
 
 export function updateBall({ dt, state, ball }) {
+    if (!state.previousBallPosition) state.previousBallPosition = new THREE.Vector3();
+    state.previousBallPosition.copy(ball.position);
     ball.position.addScaledVector(state.ballVelocity, dt);
     state.ballVelocity.y -= 15.5 * dt;
     const groundY = BALL_GROUND_Y;
@@ -486,151 +500,21 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
     
     const profile = KEEPER_PROFILES[state.keeperLevel] || KEEPER_PROFILES[1];
     
-    // 处理被击倒状态（优先级最高）
-    if (elapsedTime < state.keeperGetUpUntil && state.keeperState !== KEEPER_STATE.KNOCKED) {
-        state.keeperMode = 'knocked';
+    // A knockdown cancels a save, including its future collision event.
+    if (elapsedTime < state.keeperGetUpUntil) {
+        state.keeperSave = null;
         state.keeperState = KEEPER_STATE.KNOCKED;
+        state.keeperMode = 'knocked';
+        keeper.position.y = 0;
         keeper.userData.velocity.set(0, 0, 0);
-        const getUpDuration = profile.getUpDuration || 0.6;
-        const getUpProgress = elapsedTime <= state.keeperDownUntil
-            ? 0
-            : THREE.MathUtils.clamp((elapsedTime - state.keeperDownUntil) / getUpDuration, 0, 1);
-        updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
+        const getUpProgress = elapsedTime <= state.keeperDownUntil ? 0
+            : THREE.MathUtils.clamp((elapsedTime - state.keeperDownUntil) / 0.6, 0, 1);
+        updateGoalkeeperAnimation(keeper, {dt, elapsedTime, knocked: true, getUpProgress});
         keeper.scale.set(1, 1, 1);
         return;
     }
-    
-    // 状态机处理：根据 keeperState 执行不同行为
-    switch (state.keeperState) {
-        case KEEPER_STATE.SQUAT: {
-            // 下蹲蓄力阶段
-            const squatElapsed = elapsedTime - state.keeperActionStart;
-            const squatDuration = profile.squatDuration || 0.15;
-            if (squatElapsed >= squatDuration) {
-                // 转入弹跳阶段
-                state.keeperState = KEEPER_STATE.JUMP;
-                state.keeperActionStart = elapsedTime;
-            } else {
-                // 保持下蹲姿势
-                const squatProgress = squatElapsed / squatDuration;
-                keeper.userData.velocity.set(0, 0, 0);
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocking: true, knockProgress: squatProgress });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-        
-        case KEEPER_STATE.JUMP: {
-            // 弹跳腾空阶段
-            const jumpElapsed = elapsedTime - state.keeperActionStart;
-            const jumpDuration = profile.jumpDuration || 0.2;
-            if (jumpElapsed >= jumpDuration) {
-                // 转入倒地阶段
-                state.keeperState = KEEPER_STATE.DIVE;
-                state.keeperActionStart = elapsedTime;
-            } else {
-                // 腾空姿态
-                const jumpProgress = jumpElapsed / jumpDuration;
-                keeper.userData.velocity.set(0, 0, 0);
-                keeper.position.y = Math.sin(jumpProgress * Math.PI) * 0.8; // 抛物线跳跃
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress: jumpProgress });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-        
-        case KEEPER_STATE.DIVE: {
-            // 倒地伸展阶段
-            const diveElapsed = elapsedTime - state.keeperActionStart;
-            const diveDuration = profile.diveDuration || 0.35;
-            if (diveElapsed >= diveDuration) {
-                // 转入落地阶段
-                state.keeperState = KEEPER_STATE.LAND;
-                state.keeperActionStart = elapsedTime;
-            } else {
-                // 倒地扑救姿态
-                const diveProgress = diveElapsed / diveDuration;
-                keeper.userData.velocity.set(0, 0, 0);
-                keeper.position.y = Math.max(0, 0.8 - diveProgress * 0.8); // 逐渐落地
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, diving: true, diveProgress });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-        
-        case KEEPER_STATE.LAND: {
-            // 落地缓冲阶段
-            const landElapsed = elapsedTime - state.keeperActionStart;
-            const landDuration = profile.landDuration || 0.25;
-            if (landElapsed >= landDuration) {
-                // 转入起身阶段
-                state.keeperState = KEEPER_STATE.GET_UP;
-                state.keeperActionStart = elapsedTime;
-            } else {
-                // 落地缓冲姿态
-                const landProgress = landElapsed / landDuration;
-                keeper.userData.velocity.set(0, 0, 0);
-                keeper.position.y = 0;
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress: landProgress * 0.3 });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-        
-        case KEEPER_STATE.GET_UP: {
-            // 起身恢复阶段
-            const getUpElapsed = elapsedTime - state.keeperActionStart;
-            const getUpDuration = profile.getUpDuration || 0.5;
-            if (getUpElapsed >= getUpDuration) {
-                // 恢复空闲状态
-                state.keeperState = KEEPER_STATE.IDLE;
-                state.keeperMode = 'guard';
-                keeper.position.y = 0;
-            } else {
-                // 起身姿态
-                const getUpProgress = getUpElapsed / getUpDuration;
-                keeper.userData.velocity.set(0, 0, 0);
-                keeper.position.y = 0;
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-        
-        case KEEPER_STATE.KNOCKED: {
-            // 被击倒状态（由外部触发）
-            if (elapsedTime >= state.keeperGetUpUntil) {
-                state.keeperState = KEEPER_STATE.GET_UP;
-                state.keeperActionStart = elapsedTime;
-            } else {
-                keeper.userData.velocity.set(0, 0, 0);
-                const getUpDuration = profile.getUpDuration || 0.6;
-                const getUpProgress = elapsedTime <= state.keeperDownUntil ? 0 : THREE.MathUtils.clamp((elapsedTime - state.keeperDownUntil) / getUpDuration, 0, 1);
-                updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity, knocked: true, getUpProgress });
-                keeper.scale.set(1, 1, 1);
-                return;
-            }
-            break;
-        }
-    }
-    
-    // IDLE、CHARGE、RETURN、PUNCH 状态的常规处理
-    if (state.keeperState === KEEPER_STATE.DIVE) {
-        state.keeperState = KEEPER_STATE.IDLE;
-    }
-    if (state.keeperState === KEEPER_STATE.KNOCKED) {
-        state.keeperState = KEEPER_STATE.IDLE;
-    }
-    if (state.keeperState === KEEPER_STATE.PUNCH) {
-        // PUNCH 状态由专门的动画函数处理，不进入常规逻辑
-        updatePunchAnimation({ dt, state, keeper, elapsedTime });
-        return;
-    }
+    if (state.keeperState === KEEPER_STATE.KNOCKED) state.keeperState = KEEPER_STATE.IDLE;
+    if (updateKeeperSave({dt, state, keeper, ball, elapsedTime, onKeeperSave, profile})) return;
 
     const homePosition = getKeeperHomePosition(profile, state, ball);
     const ballIsPlayable = ball.position.y <= BALL_GROUND_Y + 0.18;
@@ -686,8 +570,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
     keeper.rotation.y = Math.atan2(ball.position.x - keeper.position.x, ball.position.z - keeper.position.z);
     updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
 
-    const danger = ball.position.z < FIELD.goalZ + 1.35 && state.ballVelocity.z < -0.8;
-    keeper.scale.set(1, danger ? 0.82 : 1, danger ? 1.22 : 1);
+    keeper.scale.set(1, 1, 1);
     if (state.keeperState === KEEPER_STATE.CHARGE
         && flatDistance(keeper.position, ball.position) < profile.tackleRadius
         && ballIsPlayable
@@ -698,136 +581,12 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
         return;
     }
     
-    // 高球抬手击球检测（优先级高于地面扑救）
-    const canPunchHighBall = checkHighBallPunch(keeper, ball, state.ballVelocity, profile, elapsedTime, state.lastKeeperSaveTime, state.keeperGetUpUntil, state.isResetting);
-    
-    if (canPunchHighBall) {
-        performHighBallPunch({ state, keeper, ball, elapsedTime, onKeeperSave, profile });
-        return;
-    }
-    
-    // 扇形视野检测与预判逻辑（地面扑救）
-    const canPredictSave = checkKeeperVisionAndSector(keeper, ball, state.ballVelocity, profile, elapsedTime, state.lastKeeperSaveTime, state.keeperGetUpUntil, state.isResetting);
-    
-    if (canPredictSave) {
-        // 启动完整扑救动作序列：SQUAT -> JUMP -> DIVE -> LAND -> GET_UP
-        state.keeperState = KEEPER_STATE.SQUAT;
-        state.keeperActionStart = elapsedTime;
-        state.keeperMode = 'dive';
-        
-        // Level 1 keeper does not adjust position before diving (dives in place)
-        // Higher level keepers can shift position slightly before diving
-        if (state.keeperLevel !== 1) {
-            const diveDirection = Math.sign(ball.position.x - keeper.position.x);
-            const diveDistance = Math.min(Math.abs(ball.position.x - keeper.position.x), 1.2);
-            keeper.position.x += diveDirection * diveDistance * 0.5;
-            keeper.position.x = THREE.MathUtils.clamp(keeper.position.x, -FIELD.width / 2 + 0.65, FIELD.width / 2 - 0.65);
-        }
-        
-        // 设置拦截时间点，在倒地阶段触球
-        const totalDiveTime = (profile.squatDuration || 0.15) + (profile.jumpDuration || 0.2) + (profile.diveDuration || 0.35) * 0.7;
-        state.keeperDiveUntil = elapsedTime + totalDiveTime;
-        state.lastKeeperSaveTime = elapsedTime;
-        
-        // 物理碰撞：改变球的速度
-        const diveClearPower = profile.diveClearPower || 8.5;
-        const clearX = Math.sign(ball.position.x - keeper.position.x) * diveClearPower;
-        state.ballVelocity.set(clearX, 4.5, Math.abs(state.ballVelocity.z) * 0.3);
-        ball.position.y = Math.max(ball.position.y, BALL_GROUND_Y + 0.08);
-        
-        const taunt = KEEPER_SAVE_TAUNTS[Math.floor(Math.random() * KEEPER_SAVE_TAUNTS.length)];
-        onKeeperSave(taunt);
-        return;
-    }
-    
-    // 原有的近距离扑救逻辑（作为备用）
-    const ballHeadingToGoal = state.ballVelocity.z < -2.5;
-    const veryNearGoalLine = ball.position.z < FIELD.goalZ + 0.5 && ball.position.z > FIELD.goalZ - 0.3;
-    if (ballHeadingToGoal
-        && veryNearGoalLine
-        && flatDistance(keeper.position, ball.position) < profile.saveRadius
-        && ball.position.y < 1.05
-        && elapsedTime - state.lastKeeperSaveTime > profile.saveCooldown
-        && state.keeperState === KEEPER_STATE.IDLE
-    ) {
-        clearBallFromKeeper({ state, keeper, ball, elapsedTime, onKeeperSave, profile, lift: 5.8 });
+    if (!state.isResetting && elapsedTime - state.lastKeeperSaveTime > profile.saveCooldown) {
+        const prediction = predictKeeperSave(keeper, ball, state.ballVelocity, profile);
+        if (prediction) beginKeeperSave({state, keeper, ball, elapsedTime, profile}, prediction);
     }
 }
 
-/**
- * 检查球是否在门将的扇形活动区间和视野范围内，并预测是否能扑救成功
- * @param {THREE.Object3D} keeper - 门将对象
- * @param {THREE.Mesh} ball - 足球对象
- * @param {THREE.Vector3} ballVelocity - 足球速度
- * @param {Object} profile - 门将配置参数
- * @param {number} elapsedTime - 当前游戏时间
- * @param {number} lastSaveTime - 上次扑救时间
- * @param {number} getUpUntil - 起身完成时间
- * @param {boolean} isResetting - 是否正在重置
- * @returns {boolean} 是否应该启动扑救动作
- */
-function checkKeeperVisionAndSector(keeper, ball, ballVelocity, profile, elapsedTime, lastSaveTime, getUpUntil, isResetting) {
-    // 基本检查
-    if (elapsedTime - lastSaveTime <= profile.saveCooldown) return false;
-    if (elapsedTime < getUpUntil) return false;
-    if (isResetting) return false;
-    
-    // 球必须是飞向球门的
-    if (ballVelocity.z >= -1.5) return false;
-    
-    // 计算球的位置相对于门将的方向向量
-    const ballOffset = ball.position.clone().sub(keeper.position);
-    ballOffset.y = 0; // 忽略高度差，只考虑水平面
-    const distanceToBall = ballOffset.length();
-    
-    // 检查距离是否在扇形半径内
-    if (distanceToBall > profile.sectorRadius || distanceToBall < 0.3) return false;
-    
-    // 归一化方向向量
-    ballOffset.normalize();
-    
-    // 计算门将朝向（面向球门前方）
-    const keeperForward = new THREE.Vector3(0, 0, -1); // 门将默认面向球场
-    
-    // 计算球相对于门将朝向的角度
-    const angleToBall = keeperForward.angleTo(ballOffset);
-    
-    // 检查是否在扇形活动区间内
-    if (angleToBall > profile.sectorAngle) return false;
-    
-    // 检查是否在视野范围内（更严格的视野角度）
-    if (angleToBall > profile.visionAngle) return false;
-    
-    // 检查球的飞行高度是否在可扑救范围内
-    if (ball.position.y > 2.4) return false;
-    
-    // 预测球的轨迹，判断是否能碰到球
-    const predictTime = profile.anticipate || 0.25;
-    const predictedBallX = ball.position.x + ballVelocity.x * predictTime;
-    const predictedBallZ = ball.position.z + ballVelocity.z * predictTime;
-    
-    // 检查预测点是否在球门线附近（危险区域）
-    const isDangerZone = predictedBallZ < FIELD.goalZ + 0.8 && predictedBallZ > FIELD.goalZ - 0.5;
-    if (!isDangerZone) return false;
-    
-    // Level 1 keeper: only checks if ball is within dive reach, does not calculate movement time
-    if (profile.lateralSpeed === 0) {
-        // For level 1, check if the predicted ball position is within half goal width (dive reach)
-        const halfGoalWidth = 2.65; // Half of standard goal width
-        const canReachByDiving = Math.abs(predictedBallX) <= halfGoalWidth;
-        return canReachByDiving;
-    }
-    
-    // 计算门将移动到预测点所需时间
-    const lateralDistance = Math.abs(predictedBallX - keeper.position.x);
-    const moveTime = lateralDistance / Math.max(profile.lateralSpeed || 5.0, 0.1);
-    
-    // 如果能在球到达前移动到位置，则扑救可行
-    const timeToGoal = Math.abs((predictedBallZ - FIELD.goalZ) / ballVelocity.z);
-    const canReachInTime = moveTime < timeToGoal * 0.85; // 留 15% 余量
-    
-    return canReachInTime;
-}
 
 function getKeeperHomePosition(profile, state, ball) {
     const predictedX = THREE.MathUtils.clamp(
@@ -913,12 +672,18 @@ export function resetRound({ state, player, keeper, referee, ball, showMessage }
     state.isResetting = true;
     player.position.set(0, 0, 3.85);
     keeper.position.set(0, 0, FIELD.goalZ + 0.72);
+    keeper.rotation.y = 0;
+    keeper.scale.set(1, 1, 1);
     ball.position.set(0, BALL_GROUND_Y, 2.65);
     state.ballVelocity.set(0, 0, 0);
     cancelKickCharge(state);
     state.kickPoseTimer = 0;
     state.kickPoseDuration = KICK_RELEASE_DURATION;
     state.kickPosePower = 0;
+    state.kickAction = null;
+    state.kickTargetIsKeeper = false;
+    state.keeperSave = null;
+    state.previousBallPosition = ball.position.clone();
     state.keeperMode = 'guard';
     state.keeperState = KEEPER_STATE.IDLE;
     state.keeperChargeUntil = 0;

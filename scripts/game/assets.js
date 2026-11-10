@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { BALL_RADIUS, FIELD, FIELD_SURFACE_Y, MODEL_ASSETS } from './config.js';
+import { updatePlayerAnimation } from './player-animation.js';
+import { updateGoalkeeperAnimation } from './goalkeeper-animation.js';
 
 export function createMaterials() {
     return {
@@ -182,6 +184,15 @@ export function createCharacter(materials, material, type) {
     body.position.y = bodyBaseY;
     body.castShadow = true;
 
+    // Bind a small shorts-colored pelvis to the hips. The original torso
+    // stopped above the thigh pivots, which exposed a gap during a dive.
+    const pelvis = new THREE.Group();
+    pelvis.position.y = scaleValue(0.42);
+    const pelvisMesh = new THREE.Mesh(new THREE.BoxGeometry(scaleValue(0.5), scaleValue(0.24), scaleValue(0.34)), shorts);
+    pelvisMesh.position.y = scaleValue(0.08);
+    pelvisMesh.castShadow = true;
+    pelvis.add(pelvisMesh);
+
     const head = new THREE.Group();
     head.position.y = headBaseY;
     const fallbackHead = createVoxelHead(skin, hairMaterial, type);
@@ -200,10 +211,11 @@ export function createCharacter(materials, material, type) {
         rightLeg: createLimb({ upperLength: scaleValue(0.43), lowerLength: scaleValue(0.39), radius: scaleValue(0.098), upperMaterial: shorts, lowerMaterial: socks, endMaterial: boot, endScale: scaleTuple([0.22, 0.11, 0.34]) }),
     };
 
-    limbRefs.leftArm.hip.position.set(scaleValue(-0.46), scaleValue(0.98), 0);
-    limbRefs.rightArm.hip.position.set(scaleValue(0.46), scaleValue(0.98), 0);
-    limbRefs.leftLeg.hip.position.set(scaleValue(-0.19), scaleValue(0.42), 0);
-    limbRefs.rightLeg.hip.position.set(scaleValue(0.19), scaleValue(0.42), 0);
+    limbRefs.leftArm.hip.position.set(scaleValue(0.46), scaleValue(0.98), 0);
+    limbRefs.rightArm.hip.position.set(scaleValue(-0.46), scaleValue(0.98), 0);
+    limbRefs.leftLeg.hip.position.set(scaleValue(0.19), scaleValue(0.42), 0);
+    limbRefs.rightLeg.hip.position.set(scaleValue(-0.19), scaleValue(0.42), 0);
+    for (const limb of Object.values(limbRefs)) limb.restHipPosition = limb.hip.position.clone();
     limbs.add(limbRefs.leftArm.hip, limbRefs.rightArm.hip, limbRefs.leftLeg.hip, limbRefs.rightLeg.hip);
 
     if (type === 'player') {
@@ -214,13 +226,14 @@ export function createCharacter(materials, material, type) {
         visualRoot.add(nameTag);
     }
 
-    visualRoot.add(body, head, limbs);
+    visualRoot.add(pelvis, body, head, limbs);
     group.add(visualRoot, shadow);
     group.userData.velocity = new THREE.Vector3();
     group.userData.facing = new THREE.Vector3(0, 0, -1);
     const hitMaterials = collectHitFlashMaterials(visualRoot);
     group.userData.hitFlashUntil = 0;
-    group.userData.pose = { visualRoot, body, head, limbs, hitMaterials, bodyBaseY, headBaseY, ...limbRefs, lastPosition: new THREE.Vector3(), speed: 0, phase: Math.random() * Math.PI * 2 };
+    group.userData.type = type;
+    group.userData.pose = { bodyScale, visualRoot, pelvis, body, head, limbs, hitMaterials, bodyBaseY, headBaseY, ...limbRefs, lastPosition: new THREE.Vector3(), speed: 0, phase: Math.random() * Math.PI * 2 };
     if (type === 'player') {
         loadZl9HeadModel(group, head);
     } else if (type === 'referee') {
@@ -246,6 +259,7 @@ function loadZl9HeadModel(character, headAnchor) {
 
         headAnchor.clear();
         headAnchor.add(headModel);
+        character.userData.headLoaded = true;
         character.userData.pose.hitMaterials.push(...collectHitFlashMaterials(headModel));
     });
 }
@@ -265,6 +279,7 @@ function loadRefereeHeadModel(character, headAnchor) {
 
         headAnchor.clear();
         headAnchor.add(headModel);
+        character.userData.headLoaded = true;
         character.userData.pose.hitMaterials.push(...collectHitFlashMaterials(headModel));
     });
 }
@@ -284,6 +299,7 @@ function loadKeeperHeadModel(character, headAnchor) {
 
         headAnchor.clear();
         headAnchor.add(headModel);
+        character.userData.headLoaded = true;
         character.userData.pose.hitMaterials.push(...collectHitFlashMaterials(headModel));
     });
 }
@@ -549,6 +565,7 @@ function createVoxelHair(material, type) {
 function createLimb({ upperLength, lowerLength, radius, upperMaterial, lowerMaterial, endMaterial, endScale }) {
     const hip = new THREE.Group();
     const knee = new THREE.Group();
+    const endJoint = new THREE.Group();
     const upper = createVoxelLimbSegment(radius, upperLength, upperMaterial);
     const lower = createVoxelLimbSegment(radius * 0.88, lowerLength, lowerMaterial);
     const end = new THREE.Mesh(new THREE.BoxGeometry(...endScale), endMaterial);
@@ -556,12 +573,14 @@ function createLimb({ upperLength, lowerLength, radius, upperMaterial, lowerMate
     upper.position.y = -upperLength / 2;
     knee.position.y = -upperLength;
     lower.position.y = -lowerLength / 2;
-    end.position.set(0, -lowerLength - 0.02, -endScale[2] * 0.2);
+    endJoint.position.y = -lowerLength - 0.02;
+    end.position.z = endScale[2] * 0.2;
     upper.castShadow = lower.castShadow = end.castShadow = true;
 
-    knee.add(lower, end);
+    endJoint.add(end);
+    knee.add(lower, endJoint);
     hip.add(upper, knee);
-    return { hip, knee, upper, lower, end };
+    return { hip, knee, upper, lower, end, endJoint };
 }
 
 function createVoxelLimbSegment(radius, length, material) {
@@ -586,171 +605,10 @@ function createVoxelLimbSegment(radius, length, material) {
     return segment;
 }
 
-export function updateCharacterPose(character, { dt, elapsedTime, movement = character.userData.velocity, kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0, knocked = false, getUpProgress = 0, diving = false, diveProgress = 0, punching = false, punchProgress = 0, isSprinting = false, isDribbling = false } = {}) {
-    const pose = character.userData.pose;
-    if (!pose) return;
-
-    const measuredSpeed = pose.lastPosition.distanceTo(character.position) / Math.max(dt, 0.0001);
-    pose.lastPosition.copy(character.position);
-    pose.speed = THREE.MathUtils.lerp(pose.speed, Math.max(measuredSpeed, movement.length()), Math.min(1, dt * 10));
-
-    applyHitFlash(character, pose, elapsedTime);
-
-    const bodyY = pose.bodyBaseY ?? CHARACTER_BODY_Y;
-    const headY = pose.headBaseY ?? CHARACTER_HEAD_Y;
-    const runAmount = THREE.MathUtils.clamp(pose.speed / 5.2, 0, 1);
-    const sprintFactor = isSprinting ? 1.35 : (isDribbling ? 1.18 : 1.0);
-    pose.visualRoot.rotation.set(0, 0, 0);
-    pose.visualRoot.position.set(0, FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE, 0);
-
-    if (knocked) {
-        const recovery = THREE.MathUtils.clamp(getUpProgress, 0, 1);
-        const fall = 1 - recovery;
-        pose.visualRoot.rotation.x = -Math.PI / 2 * fall;
-        pose.visualRoot.rotation.z = 0.16 * Math.sin(elapsedTime * 16) * fall;
-        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.18 * recovery;
-        pose.body.position.y = bodyY - 0.02;
-        pose.body.rotation.set(0.12 * fall, 0, 0.18 * fall);
-        pose.head.position.y = headY - 0.06;
-        pose.head.rotation.set(-0.22 * fall, 0, 0.34 * fall);
-        updatePlayerNameTagFlash(pose, elapsedTime);
-        setArmPose(pose.leftArm, 1.18 * fall, 0.12, 0.72 * fall);
-        setArmPose(pose.rightArm, -1.05 * fall, 0.18, -0.68 * fall);
-        setLegPose(pose.leftLeg, 0.34 * fall, 0.22, -0.28 * fall);
-        setLegPose(pose.rightLeg, -0.42 * fall, 0.18, 0.3 * fall);
-        return;
-    }
-    
-    // Punch save animation: goalkeeper jumps up with fist raised to hit high ball
-    if (punching) {
-        const punch = THREE.MathUtils.clamp(punchProgress, 0, 1);
-        const punchPhase = Math.sin(punch * Math.PI);
-        
-        // Body jumps up and extends
-        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.4 * punchPhase;
-        pose.visualRoot.rotation.z = 0.3 * punchPhase;  // Body tilt
-        pose.visualRoot.rotation.x = -0.2 * punchPhase;
-        
-        pose.body.position.y = bodyY + 0.25 * punchPhase;
-        pose.body.rotation.set(-0.15 * punchPhase, 0, 0.3 * punchPhase);
-        
-        // Head looks up at the ball, tilts same as body
-        pose.head.position.y = headY + 0.15 * punchPhase;
-        pose.head.rotation.set(-0.5 * punchPhase, 0, 0.3 * punchPhase);
-        
-        // Right arm: rotates fully forward from shoulder joint (forward rotation for punching)
-        // Start: hanging down (~-0.2), End: fully rotated forward (Math.PI - 0.2 ≈ 2.94)
-        const rightArmAngle = -0.2 - punchPhase * Math.PI;
-        setArmPose(pose.rightArm, rightArmAngle, 0.15, 0);
-        
-        // Right forearm bends at elbow to bring fist forward/up during peak
-        // The forearm is the 'knee' joint of the arm limb
-        const rightForearmBend = punchPhase > 0.5 ? (punchPhase - 0.5) * 2.5 : 0;
-        pose.rightArm.knee.rotation.x = rightForearmBend;
-        
-        // Left arm: rotates fully forward from shoulder joint (same direction as right arm for punching)
-        // Start: hanging down (~-0.2), End: fully rotated forward (Math.PI - 0.2 ≈ 2.94)
-        const leftArmAngle = -0.2 - punchPhase * Math.PI;
-        setArmPose(pose.leftArm, leftArmAngle, 0.2, 0);
-        
-        // Left forearm: slight bend for balance
-        pose.leftArm.knee.rotation.x = punchPhase * 1.0;
-        
-        // Legs: bend knees during jump, extend on landing
-        const kneeBend = punchPhase > 0.5 ? (1 - punchPhase) * 1.3 : punchPhase * 1.3;
-        setLegPose(pose.leftLeg, -kneeBend, 0.8 * punchPhase, -0.3 * punchPhase);
-        setLegPose(pose.rightLeg, -kneeBend, 0.6 * punchPhase, 0.3 * punchPhase);
-        
-        updatePlayerNameTagFlash(pose, elapsedTime, punchPhase);
-        return;
-    }
-    
-    // Diving save animation: goalkeeper leaps sideways with both arms extended
-    if (diving) {
-        const dive = THREE.MathUtils.clamp(diveProgress, 0, 1);
-        const divePhase = Math.sin(dive * Math.PI);
-        
-        // Body leans and rotates towards dive direction (sideways tilt)
-        pose.visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE + 0.08 * divePhase;
-        pose.visualRoot.rotation.z = 1.1 * divePhase;  // Stronger body tilt
-        pose.visualRoot.rotation.x = -0.45 * divePhase;
-        
-        pose.body.position.y = bodyY - 0.05 + 0.1 * divePhase;
-        pose.body.rotation.set(-0.3 * divePhase, 0, 0.8 * divePhase);  // More pronounced lean
-        
-        // Head tilts same as body (inherits body rotation fully)
-        pose.head.position.y = headY - 0.02 + 0.08 * divePhase;
-        pose.head.rotation.set(-0.3 * divePhase, 0, 0.8 * divePhase);  // Same tilt as body
-        
-        // Both arms stretched out wide and UP to block the ball (hands raised)
-        setArmPose(pose.leftArm, 2.1 * divePhase, 0.35, 1.65 * divePhase);  // Higher arm position
-        setArmPose(pose.rightArm, -2.1 * divePhase, 0.35, -1.65 * divePhase);  // Higher arm position
-        
-        // Legs kick back during dive, body drops to ground
-        setLegPose(pose.leftLeg, -1.05 * divePhase, 1.25 * divePhase, -0.45 * divePhase);
-        setLegPose(pose.rightLeg, -1.05 * divePhase, 1.25 * divePhase, 0.45 * divePhase);
-        
-        updatePlayerNameTagFlash(pose, elapsedTime, divePhase);
-        return;
-    }
-    const phase = elapsedTime * (7.8 + runAmount * 4.2) * sprintFactor + pose.phase;
-    const stride = Math.sin(phase) * runAmount * sprintFactor;
-    const counterStride = Math.sin(phase + Math.PI) * runAmount * sprintFactor;
-    const lift = Math.abs(Math.sin(phase)) * runAmount * sprintFactor;
-    const sideBob = Math.sin(phase * 2) * runAmount;
-    
-    // Sprint: more knee bend (屈膝), more arm bend (屈臂), more vertical bobbing (上下颠簸)
-    const kneeBendMultiplier = isSprinting ? 1.45 : (isDribbling ? 1.28 : 1.0);
-    const armBendMultiplier = isSprinting ? 1.35 : (isDribbling ? 1.18 : 1.0);
-    const verticalBobMultiplier = isSprinting ? 1.65 : (isDribbling ? 1.25 : 1.0);
-
-    pose.body.position.y = bodyY + lift * 0.035 * verticalBobMultiplier;
-    pose.body.rotation.set(-0.08 * runAmount * sprintFactor, 0, sideBob * 0.035);
-    updatePlayerNameTagFlash(pose, elapsedTime, lift);
-    pose.head.position.y = headY + lift * 0.035 * verticalBobMultiplier;
-    pose.head.rotation.set(0, 0, -sideBob * 0.025);
-
-    setArmPose(pose.leftArm, -0.46 * counterStride - 0.08, (0.34 + 0.22 * Math.max(counterStride, 0)) * armBendMultiplier, 0.08);
-    setArmPose(pose.rightArm, -0.46 * stride - 0.08, (0.34 + 0.22 * Math.max(stride, 0)) * armBendMultiplier, -0.08);
-    setLegPose(pose.leftLeg, 0.66 * stride, (0.72 * Math.max(-stride, 0) + 0.16 * runAmount) * kneeBendMultiplier, -0.05);
-    setLegPose(pose.rightLeg, 0.66 * counterStride, (0.72 * Math.max(-counterStride, 0) + 0.16 * runAmount) * kneeBendMultiplier, 0.05);
-
-    if (kicking) {
-        const charge = THREE.MathUtils.clamp(kickPower, 0.2, 1);
-        if (kickPhase === 'charge') {
-            const progress = THREE.MathUtils.clamp(kickProgress, 0, 1);
-            const swing = Math.sin(progress * Math.PI * 0.5);
-            const landing = Math.sin(progress * Math.PI);
-            pose.visualRoot.position.y += landing * 0.18;
-            pose.body.position.y = bodyY - 0.04 + landing * 0.08;
-            pose.body.rotation.x = THREE.MathUtils.lerp(0.18, -0.16, swing);
-            pose.head.position.y = headY - 0.04 + landing * 0.08;
-            setLegPose(pose.leftLeg, -0.18, 0.46 * (1 - swing), -0.08);
-            setLegPose(pose.rightLeg, THREE.MathUtils.lerp(-1.18, 0.92, swing), THREE.MathUtils.lerp(1.12, 0.28, swing), 0.04);
-        } else {
-            pose.visualRoot.position.y -= 0.07 * charge;
-            pose.body.position.y = bodyY - 0.04 - 0.04 * charge;
-            pose.body.rotation.x = 0.14 * charge;
-            pose.head.position.y = headY - 0.05 - 0.03 * charge;
-            setLegPose(pose.leftLeg, -0.12, 0.54 + charge * 0.22, -0.08);
-            setLegPose(pose.rightLeg, -0.76 - charge * 0.52, 0.9 + charge * 0.28, 0.04);
-        }
-        setArmPose(pose.leftArm, 0.46, 0.4, 0.24);
-        setArmPose(pose.rightArm, -0.58, 0.28, -0.24);
-    }
-}
-
-
-
-function updatePlayerNameTagFlash(pose, elapsedTime, lift = 0) {
-    const nameTag = pose.visualRoot.children.find((child) => child.isSprite && child.userData.baseScale);
-    if (!nameTag) return;
-
-    const flash = 0.62 + 0.38 * Math.sin(elapsedTime * 8.5);
-    const pulse = 1 + 0.08 * Math.sin(elapsedTime * 8.5);
-    nameTag.material.opacity = 0.72 + flash * 0.28;
-    nameTag.scale.copy(nameTag.userData.baseScale).multiplyScalar(pulse);
-    nameTag.position.y = 2.1 + lift * 0.035;
+// Keep the exhibition page on the same animation path as the game.
+export function updateCharacterPose(character, options = {}) {
+    if (character.userData.type === 'keeper') updateGoalkeeperAnimation(character, options);
+    else updatePlayerAnimation(character, options);
 }
 
 function collectHitFlashMaterials(root) {

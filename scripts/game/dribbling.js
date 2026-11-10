@@ -13,6 +13,10 @@ const DRIBBLE_FOOT_SIDE_OFFSET = 0.14;
  * 双击后方向键会临时解除带球锁定，玩家离开球后需要再次触球才能重新进入带球状态。
  */
 export function updateDribbling({ dt, state, keys, player, ball, getAimDirection, elapsedTime }) {
+    if (state.kickAction) {
+        state.isDribbling = false;
+        return false;
+    }
     const distanceToBall = flatDistance(player.position, ball.position);
 
     if (state.dribbleNeedsRetouch && distanceToBall > DRIBBLE_RETOUCH_RESET_RADIUS) {

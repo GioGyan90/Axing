@@ -1,0 +1,5192 @@
+{
+  "kick": {
+    "version": 1,
+    "name": "右脚正脚背射门",
+    "duration": 1.3,
+    "loop": false,
+    "hands": {
+      "left": "looseFist",
+      "right": "looseFist"
+    },
+    "frames": [
+      {
+        "t": 0,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.15,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              12,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              35,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.3,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              -13,
+              -5
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              -8,
+              20,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              8,
+              -7,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -35,
+              -48
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              -24,
+              58
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -8,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              32,
+              0,
+              -5
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              82,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              12,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.42,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              -13,
+              -5
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              5,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              8,
+              -7,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -35,
+              -48
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              -24,
+              58
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -8,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              65,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              12,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.52,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              6,
+              2
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              12,
+              -10,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -10,
+              3,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              15,
+              -48
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              35,
+              68
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -8,
+              0,
+              1
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -48,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              30,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.64,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              3,
+              14,
+              4
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              17,
+              -20,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -10,
+              3,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              25,
+              -56
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              38,
+              53
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -8,
+              0,
+              1
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -73,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              24,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              4,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.82,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              3,
+              14,
+              4
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              17,
+              -20,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -10,
+              3,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              25,
+              -56
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              38,
+              53
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -8,
+              0,
+              1
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -38,
+              0,
+              -2
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              45,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              4,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.05,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              8,
+              0,
+              -1
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.3,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "diveLeft": {
+    "version": 1,
+    "name": "左侧蹬地横扑与起身",
+    "duration": 1.6,
+    "loop": false,
+    "hands": {
+      "left": "open",
+      "right": "open"
+    },
+    "frames": [
+      {
+        "t": 0,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.13,
+        "root": [
+          0,
+          -0.09,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              -7
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -30,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -34,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.25,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              -28
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -12,
+              15
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              10,
+              -70
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -5,
+              0,
+              5
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              5,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              15,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.43,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              -62
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              52
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -116
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              4,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              17,
+              0,
+              -9
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              55,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.57,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              -76
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              52
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -116
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              4,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              17,
+              0,
+              -9
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              55,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.72,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              4,
+              0,
+              -83
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              52
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -116
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              4,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              17,
+              0,
+              -9
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              38,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              68,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.9,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              8,
+              0,
+              -84
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              5,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -8,
+              68
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              12,
+              -110
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -12
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              4,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              17,
+              0,
+              -9
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              50,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              80,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.08,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              12,
+              0,
+              -55
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              5,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -8,
+              68
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              12,
+              -110
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -12
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -35,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -25,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              85,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              100,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.3,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              -18
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -30,
+              -45
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              50
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -30,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -34,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.6,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "diveRight": {
+    "version": 1,
+    "name": "右侧蹬地横扑与起身",
+    "duration": 1.6,
+    "loop": false,
+    "hands": {
+      "left": "open",
+      "right": "open"
+    },
+    "frames": [
+      {
+        "t": 0,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.13,
+        "root": [
+          0,
+          -0.09,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              7
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -30,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -34,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.25,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              28
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              12,
+              -15
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -10,
+              70
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -5,
+              0,
+              -5
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              5,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              15,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.43,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              62
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -52
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              116
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              4,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              17,
+              0,
+              9
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              55,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.57,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              76
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -52
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              116
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              4,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              17,
+              0,
+              9
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              55,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.72,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              4,
+              0,
+              83
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              0,
+              0,
+              3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              6,
+              -52
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -6,
+              116
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              4,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              17,
+              0,
+              9
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              38,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              68,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.9,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              8,
+              0,
+              84
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              5,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              8,
+              -68
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -12,
+              110
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              12
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              4,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              17,
+              0,
+              9
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              50,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              80,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.08,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              12,
+              0,
+              55
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              5,
+              0,
+              -3
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              0,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              8,
+              -68
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -12,
+              110
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              12
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -35,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -25,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              85,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              100,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -18,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.3,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              18
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              30,
+              45
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -50
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -30,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -34,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.6,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "punch": {
+    "version": 1,
+    "name": "高球双拳解围与落地",
+    "duration": 1.25,
+    "loop": false,
+    "hands": {
+      "left": "fist",
+      "right": "fist"
+    },
+    "frames": [
+      {
+        "t": 0,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.14,
+        "root": [
+          0,
+          -0.08,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -30,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -34,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.28,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              -6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -14,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -8,
+              65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              8,
+              -65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              5,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              10,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              12,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.45,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              -6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -14,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -5,
+              100
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              5,
+              -100
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              5,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              10,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.58,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -14,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -15,
+              88
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              15,
+              -88
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              8
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              -8
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              5,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              10,
+              0,
+              -4
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              16,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.76,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -23,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -23,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              46,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              46,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.25,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "scoop": {
+    "version": 1,
+    "name": "中路低球下蹲封堵",
+    "duration": 1.2,
+    "loop": false,
+    "hands": {
+      "left": "open",
+      "right": "open"
+    },
+    "frames": [
+      {
+        "t": 0,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.15,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -30,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -34,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.32,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -35,
+              -70
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              35,
+              70
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -12
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              12
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -45,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -45,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              85,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              85,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.45,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -35,
+              -70
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              35,
+              70
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -12
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              12
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -60,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -60,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              112,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              112,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.62,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              3,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -25,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -35,
+              -70
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              35,
+              70
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -12
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              12
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -60,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -60,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              112,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              112,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -52,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 0.82,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              8,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              14,
+              0,
+              4
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -30,
+              0,
+              10
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -34,
+              0,
+              -10
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              58,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              64,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -28,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -30,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.05,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "t": 1.2,
+        "root": [
+          0,
+          0,
+          0
+        ],
+        "rotations": [
+          {
+            "joint": "Hips",
+            "degrees": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Spine",
+            "degrees": [
+              6,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "Head",
+            "degrees": [
+              -5,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftArm",
+            "degrees": [
+              0,
+              -20,
+              -65
+            ]
+          },
+          {
+            "joint": "RightArm",
+            "degrees": [
+              0,
+              20,
+              65
+            ]
+          },
+          {
+            "joint": "LeftForeArm",
+            "degrees": [
+              0,
+              0,
+              -35
+            ]
+          },
+          {
+            "joint": "RightForeArm",
+            "degrees": [
+              0,
+              0,
+              35
+            ]
+          },
+          {
+            "joint": "LeftUpLeg",
+            "degrees": [
+              -10,
+              0,
+              6
+            ]
+          },
+          {
+            "joint": "RightUpLeg",
+            "degrees": [
+              -10,
+              0,
+              -6
+            ]
+          },
+          {
+            "joint": "LeftLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightLeg",
+            "degrees": [
+              20,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "LeftFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          },
+          {
+            "joint": "RightFoot",
+            "degrees": [
+              -10,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
