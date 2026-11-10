@@ -7,6 +7,6 @@ globalThis.document = {createElement: () => ({width:0,height:0,getContext:()=>ne
 globalThis.window = {setTimeout:noop,clearTimeout:noop};
 export function character(type = 'keeper') {
     const materials = createMaterials();
-    return createCharacter(materials, type === 'player' ? materials.player : materials.keeper, type);
+    return createCharacter(materials, materials[type] || materials.keeper, type);
 }
 export {THREE};

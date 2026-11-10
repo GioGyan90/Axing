@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BALL_GROUND_Y, BALL_RADIUS, FIELD } from './config.js';
+import {isInRefereeVision} from './referee-vision.js';
 
 /**
  * 射门逻辑
@@ -138,23 +139,6 @@ export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, sh
         showMessage(`你把门将踢倒了！眩晕 ${knockdownDuration.toFixed(1)} 秒`);
     }
     return true;
-}
-
-/**
- * 检查目标是否在裁判视野内
- */
-function isInRefereeVision(target, referee) {
-    const REFEREE_VISION_RADIUS = 7.5;
-    const REFEREE_VISION_HALF_ANGLE = THREE.MathUtils.degToRad(55);
-    
-    const offset = target.clone().sub(referee.position);
-    offset.y = 0;
-    const distance = offset.length();
-    if (distance > REFEREE_VISION_RADIUS || distance < 0.001) return false;
-    offset.normalize();
-    const forward = new THREE.Vector3(Math.sin(referee.rotation.y), 0, Math.cos(referee.rotation.y)).normalize();
-    const angle = forward.angleTo(offset);
-    return angle <= REFEREE_VISION_HALF_ANGLE;
 }
 
 /**

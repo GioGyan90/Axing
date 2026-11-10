@@ -9,6 +9,14 @@ export const FIELD_SURFACE_Y = 0.04;
 export const BALL_RADIUS = 0.28;
 export const BALL_GROUND_Y = FIELD_SURFACE_Y + BALL_RADIUS;
 
+// Reduce the old 7.5-unit sight distance by 2/3; keep its viewing angle.
+export const REFEREE_VISION = Object.freeze({radius: 2.5, halfAngle: 55 * Math.PI / 180});
+export const DEFENDER_PROFILE = Object.freeze({
+    level: 3, speed: 5.1, anticipation: 0.16, spawnX: 2.3, spawnZ: -0.2,
+    gracePeriod: 1.2, tackleRange: 0.9, contactTime: 0.22,
+    tackleDuration: 0.58, tackleCooldown: 1.25, maxBallHeight: 0.62,
+});
+
 export const MODEL_ASSETS = Object.freeze({
     soccerBall: new URL('../../models/soccer_ball.glb', import.meta.url).href,
     portraitModel: new URL('../../models/092187c58cb33a5723b3719eece5c5c2.glb', import.meta.url).href,

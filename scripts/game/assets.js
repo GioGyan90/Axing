@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { BALL_RADIUS, FIELD, FIELD_SURFACE_Y, MODEL_ASSETS } from './config.js';
+import { BALL_RADIUS, FIELD, FIELD_SURFACE_Y, MODEL_ASSETS, REFEREE_VISION } from './config.js';
 import { updatePlayerAnimation } from './player-animation.js';
 import { updateGoalkeeperAnimation } from './goalkeeper-animation.js';
 
@@ -10,6 +10,7 @@ export function createMaterials() {
         stripe: new THREE.MeshStandardMaterial({ color: 0x24975d, roughness: 0.88 }),
         line: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 }),
         player: new THREE.MeshStandardMaterial({ color: 0x4facfe, roughness: 0.52, metalness: 0.08 }),
+        defender: new THREE.MeshStandardMaterial({ color: 0xffad36, roughness: 0.6 }),
         keeper: new THREE.MeshStandardMaterial({ color: 0xff5f8f, roughness: 0.55, metalness: 0.04 }),
         referee: new THREE.MeshStandardMaterial({ color: 0x05070a, roughness: 0.62, metalness: 0.05 }),
         ball: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 }),
@@ -164,7 +165,7 @@ const CHARACTER_BODY_HEIGHT = 0.42;
 const CHARACTER_HEAD_Y = 1.3;
 
 export function createCharacter(materials, material, type) {
-    const bodyScale = type === 'player' ? PLAYER_BODY_SCALE : 1;
+    const bodyScale = ['player', 'defender'].includes(type) ? PLAYER_BODY_SCALE : 1;
     const bodyBaseY = CHARACTER_BODY_Y * bodyScale;
     const headBaseY = CHARACTER_HEAD_Y * bodyScale;
     const scaleValue = (value) => value * bodyScale;
@@ -173,7 +174,7 @@ export function createCharacter(materials, material, type) {
     const visualRoot = new THREE.Group();
     visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE;
     const skin = new THREE.MeshStandardMaterial({ color: type === 'player' ? 0xffcf9f : 0xffc4ae, roughness: 0.62 });
-    const shortsColor = type === 'player' ? 0x235da8 : (type === 'referee' ? 0x05070a : 0x7a2544);
+    const shortsColor = type === 'player' ? 0x235da8 : (type === 'referee' ? 0x05070a : type === 'defender' ? 0x193c54 : 0x7a2544);
     const shorts = new THREE.MeshStandardMaterial({ color: shortsColor, roughness: 0.62 });
     const socks = new THREE.MeshStandardMaterial({ color: 0xf6f7ff, roughness: 0.5 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.58 });
@@ -226,6 +227,7 @@ export function createCharacter(materials, material, type) {
         visualRoot.add(nameTag);
     }
 
+    if (type === 'defender') body.add(createJerseyBackNumber('4', bodyScale));
     visualRoot.add(pelvis, body, head, limbs);
     group.add(visualRoot, shadow);
     group.userData.velocity = new THREE.Vector3();
@@ -236,7 +238,7 @@ export function createCharacter(materials, material, type) {
     group.userData.pose = { bodyScale, visualRoot, pelvis, body, head, limbs, hitMaterials, bodyBaseY, headBaseY, ...limbRefs, lastPosition: new THREE.Vector3(), speed: 0, phase: Math.random() * Math.PI * 2 };
     if (type === 'player') {
         loadZl9HeadModel(group, head);
-    } else if (type === 'referee') {
+    } else if (type === 'referee' || type === 'defender') {
         loadRefereeHeadModel(group, head);
     } else if (type === 'keeper') {
         loadKeeperHeadModel(group, head);
@@ -986,8 +988,7 @@ export function updateFootRingBar({ state, player, footRingBar, elapsedTime }) {
 }
 
 export function createRefereeVisionFan(materials) {
-    const radius = 7.5;
-    const halfAngle = THREE.MathUtils.degToRad(55);
+    const {radius, halfAngle} = REFEREE_VISION;
     const shape = new THREE.Shape();
     shape.moveTo(0, 0);
     for (let i = 0; i <= 32; i++) {

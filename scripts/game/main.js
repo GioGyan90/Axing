@@ -13,6 +13,7 @@ import {
     updatePortraitModel,
     updateFootRingBar,
 } from './assets.js';
+import {updateDefender, syncDefenderDifficulty} from './defender.js';
 import { ensureAudioContext, playKeeperHitSound, playSixteenBitApplause } from './audio.js';
 import {
     breakDribble,
@@ -81,6 +82,8 @@ addLights(scene);
 const player = createCharacter(materials, materials.player, 'player');
 const keeper = createCharacter(materials, materials.keeper, 'keeper');
 const referee = createCharacter(materials, materials.referee, 'referee');
+const defender = createCharacter(materials, materials.defender, 'defender');
+defender.visible = false;
 const refereeVisionFan = createRefereeVisionFan(materials);
 referee.add(refereeVisionFan);
 const ball = createBall(materials);
@@ -90,10 +93,10 @@ const aimPoint = createPointerAim(camera);
 const getAimDirection = createAimDirectionGetter(aimPoint, ball);
 
 buildPitch(world, materials);
-world.add(player, keeper, referee, ball, aimArrow, footRingBar);
+world.add(player, keeper, referee, defender, ball, aimArrow, footRingBar);
 
 const notify = (message) => showMessage(elements.toast, state, message);
-const roundContext = { state, player, keeper, referee, ball, showMessage: notify };
+const roundContext = { state, player, keeper, referee, defender, ball, showMessage: notify, get elapsedTime() { return clock.elapsedTime; } };
 const kickContext = { state, player, ball, getAimDirection, showMessage: notify };
 const keeperKickContext = {
     state,
@@ -162,7 +165,8 @@ bindTouchControls({
 });
 bindKeeperLevel(elements.keeperLevelSelect, (level) => {
     state.keeperLevel = level;
-    notify(`门将 AI 等级 ${state.keeperLevel}`);
+    syncDefenderDifficulty({state, defender, elapsedTime: clock.elapsedTime});
+    notify(level === 3 ? '困难模式：三级门将 + 一名抢球后卫' : `门将 AI 等级 ${state.keeperLevel}`);
 });
 bindRestart(elements.restartBtn, () => {
     ensureAudioContext();
@@ -212,6 +216,8 @@ function update(dt) {
     }
     updatePlayer({ dt, state, keys, player, ball, getAimDirection, elapsedTime: clock.elapsedTime });
     updateBall({ dt, state, ball });
+    updateDefender({dt, state, defender, player, ball, elapsedTime: clock.elapsedTime,
+        onSteal: () => notify('后卫抢断！快追回足球')});
     
     // Track if keeper made a save this frame for delayed notification
     let keeperMadeSave = false;

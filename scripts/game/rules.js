@@ -7,6 +7,7 @@ import { kickBall, kickDownKeeper } from './kicking.js';
 import { updateDribbling } from './dribbling.js';
 import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, predictKeeperSave, beginKeeperSave, updateKeeperSave, KEEPER_STATE } from './goalkeeper.js';
 import { MOTION_TIMING } from './football-motion.js';
+import {resetDefender} from './defender.js';
 
 // 重新导出 kicking.js 中的函数，供 main.js 使用
 export { kickBall, kickDownKeeper };
@@ -22,8 +23,6 @@ const KEEPER_GET_UP_DURATION = 0.6;
 const KICK_RELEASE_DURATION = 0.68;
 const REFEREE_WARNING_DURATION = 1;
 const REFEREE_PATROL_SPEED = 3.2;
-const REFEREE_VISION_RADIUS = 7.5;
-const REFEREE_VISION_HALF_ANGLE = THREE.MathUtils.degToRad(55);
 
 export { KEEPER_STATE };
 const KEEPER_TAUNTS = Object.freeze([
@@ -304,18 +303,6 @@ export function consumeRefereeFailureIfReady(state, elapsedTime) {
     state.refereeWarningUntil = 0;
     return true;
 }
-
-function isInRefereeVision(target, referee) {
-    const offset = target.clone().sub(referee.position);
-    offset.y = 0;
-    const distance = offset.length();
-    if (distance > REFEREE_VISION_RADIUS || distance < 0.001) return false;
-    offset.normalize();
-    const forward = new THREE.Vector3(Math.sin(referee.rotation.y), 0, Math.cos(referee.rotation.y)).normalize();
-    const angle = forward.angleTo(offset);
-    return angle <= REFEREE_VISION_HALF_ANGLE;
-}
-
 
 export function breakDribble(state, player, ball, elapsedTime) {
     const canBreakDribble = state.isDribbling || flatDistance(player.position, ball.position) < 0.9;
@@ -667,7 +654,7 @@ export function checkGoal({ state, ball, onGoal, onOutOfBounds }) {
     if (outOfBounds) onOutOfBounds();
 }
 
-export function resetRound({ state, player, keeper, referee, ball, showMessage }, message) {
+export function resetRound({ state, player, keeper, referee, defender, ball, showMessage, elapsedTime = 0 }, message) {
     if (state.gameOver) return;
     state.isResetting = true;
     player.position.set(0, 0, 3.85);
@@ -710,6 +697,7 @@ export function resetRound({ state, player, keeper, referee, ball, showMessage }
         referee.userData.velocity.set(0, 0, 0);
         updatePlayerAnimation(referee, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
     }
+    if (defender) resetDefender({state, defender, elapsedTime});
     updatePlayerAnimation(player, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
     updateGoalkeeperAnimation(keeper, { dt: 1 / 60, elapsedTime: 0, movement: new THREE.Vector3() });
     showMessage(message);
