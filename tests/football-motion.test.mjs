@@ -89,7 +89,7 @@ test('shot is delayed until the contact marker, fires once, and preserves releas
         if(i<5) assert.equal(fired,0);
     }
     assert.equal(fired,1);assert.ok(Math.abs(power-0.5/0.675)<1e-9);
-    assert.ok(state.ballVelocity.z>14);assert.equal(state.kickAction,null);
+    assert.ok(state.ballVelocity.z < -14);assert.equal(state.kickAction,null);
 });
 
 test('a queued shot prevents repeated key presses and reset cancels its future event', () => {

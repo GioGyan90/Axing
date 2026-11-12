@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import {createCharacter,createMaterials,addLights} from '../game/assets.js';
+import {createCharacter,createMaterials,addLights,createRefereeVisionFan} from '../game/assets.js';
 import {updatePlayerAnimation} from '../game/player-animation.js';
 import {updateGoalkeeperAnimation} from '../game/goalkeeper-animation.js';
 import {CAGE,VERTICES,choosePassTarget} from './engine.js';
+import {isKnockedDown,getUpProgress} from '../game/knockdown.js';
+import {updateStunStars} from '../game/stun-stars.js';
 
 export function createWebGLView(canvas,context){
     const renderer=new THREE.WebGLRenderer({canvas,context,antialias:true});
@@ -18,19 +20,30 @@ export function createWebGLView(canvas,context){
             {nameTag:false,headModel:false,number:slot+1,shortsColor:team===0?0x194b72:0x71372a});
         model.userData.pose.phase=i*0.63;scene.add(model);players.push(model);
     }
+    const referee=createCharacter(materials,materials.referee,'referee',{headModel:false,nameTag:false});
+    const vision=createRefereeVisionFan(materials);referee.add(vision);scene.add(referee);
     const ball=new THREE.Mesh(new THREE.IcosahedronGeometry(CAGE.ballRadius,1),new THREE.MeshStandardMaterial({color:0xfff9e9,flatShading:true,roughness:0.6}));
     ball.castShadow=true;scene.add(ball);
     const mark=(color,r)=>{const m=new THREE.Mesh(new THREE.TorusGeometry(r,0.04,6,40),new THREE.MeshBasicMaterial({color}));m.rotation.x=Math.PI/2;m.position.y=0.1;scene.add(m);return m;};
     const selected=mark(0x95ffc8,0.62),receiver=mark(0xffe184,0.58);
     const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
-    return {kind:'webgl',canvas,resize(w,h){renderer.setSize(w,h,false);const span=Math.max(24,18.8*h/w);camera.left=-span*w/h/2;camera.right=span*w/h/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();},
+    return {kind:'webgl',canvas,resize(w,h){renderer.setSize(w,h,false);const span=Math.max(24,20.8*h/w);camera.left=-span*w/h/2;camera.right=span*w/h/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();},
         toField(x,y){const r=canvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2),camera);const p=new THREE.Vector3();ray.ray.intersectPlane(plane,p);return {x:p.x,z:p.z};},
         render(s,dt){
             for(const a of s.players){const m=players[a.id];m.position.set(a.x,0,a.z);m.rotation.y=Math.atan2(a.fx,a.fz);m.userData.velocity.set(a.vx,0,a.vz);
-                if(a.action)updatePlayerAnimation(m,{dt,elapsedTime:s.time,kicking:true,kickTime:0.3+a.action.age/0.64,movement:m.userData.velocity});
+                if(isKnockedDown(a.knockdown,s.time)){
+                    const getUp=getUpProgress(a.knockdown,s.time);
+                    if(a.role==='keeper')updateGoalkeeperAnimation(m,{elapsedTime:s.time,knocked:true,getUpProgress:getUp});
+                    else updatePlayerAnimation(m,{dt,elapsedTime:s.time,knocked:true,getUpProgress:getUp,movement:m.userData.velocity});
+                }
+                else if(a.action)updatePlayerAnimation(m,{dt,elapsedTime:s.time,kicking:true,kickTime:0.3+a.action.age/0.64,movement:m.userData.velocity});
                 else if(a.role==='keeper')updateGoalkeeperAnimation(m,{dt,elapsedTime:s.time,diving:!!a.dive,motionTime:a.dive?Math.min(1.6,(s.time-a.dive.started)*2):0,diveDirection:a.dive?(a.dive.side*(a.fz<0?-1:1)):1,saveHeight:s.ball.y});
                 else updatePlayerAnimation(m,{dt,elapsedTime:s.time,movement:m.userData.velocity});
+                updateStunStars(m,s.time,a.knockdown,camera);
             }
+            const r=s.referee;referee.position.set(r.x,0,r.z);referee.rotation.y=Math.atan2(r.fx,r.fz);referee.userData.velocity.set(r.vx,0,r.vz);
+            updatePlayerAnimation(referee,{dt,elapsedTime:s.time,movement:referee.userData.velocity});
+            if(s.time<r.warningUntil)referee.userData.pose.rightArm.hip.rotation.x=-1.7;
             ball.position.set(s.ball.x,s.ball.y+0.04,s.ball.z);ball.rotation.x+=s.ball.vz*dt;ball.rotation.z-=s.ball.vx*dt;
             const a=s.players[s.controlledId];selected.position.set(a.x,0.09,a.z);
             const owner=s.ball.owner==null?null:s.players[s.ball.owner],target=owner?.team===0?choosePassTarget(s,owner):null;

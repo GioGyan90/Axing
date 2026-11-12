@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { BALL_GROUND_Y, BALL_RADIUS, FIELD } from './config.js';
 import {isInRefereeVision} from './referee-vision.js';
+import {goalDirection} from './goal-aim.js';
+import {KNOCKDOWN,makeKnockdown,isKnockedDown} from './knockdown.js';
 
 /**
  * 射门逻辑
@@ -13,7 +15,10 @@ export function kickBall({ state, player, ball, getAimDirection, showMessage }, 
         showMessage('靠近足球再射门');
         return false;
     }
-    const direction = getAimDirection();
+    const hint = getAimDirection();
+    const travel = Math.abs(FIELD.goalZ - ball.position.z);
+    const preferredX = ball.position.x + hint.x * travel / Math.max(0.05, Math.abs(hint.z));
+    const direction = goalDirection(ball.position, {goalZ:FIELD.goalZ-0.5,lineZ:FIELD.goalZ,halfWidth:2.65,ballRadius:BALL_RADIUS,preferredX});
     
     // 根据踢球者与球的距离判断踢高球还是贴地球
     const distanceToBall = flatDistance(player.position, ball.position);
@@ -32,7 +37,8 @@ export function kickBall({ state, player, ball, getAimDirection, showMessage }, 
     // 垂直速度：距离越近踢得越高，力量也会影响高度
     const baseVerticalVelocity = THREE.MathUtils.lerp(0.8, 6.5, distanceRatio);
     const powerVerticalBoost = THREE.MathUtils.lerp(0, 2.5, powerRatio);
-    const verticalVelocity = baseVerticalVelocity + powerVerticalBoost;
+    const maxLift = Math.sqrt(2 * 15.5 * (2.38 - BALL_RADIUS - BALL_GROUND_Y - 0.2));
+    const verticalVelocity = Math.min(maxLift, baseVerticalVelocity + powerVerticalBoost);
     
     state.ballVelocity.set(direction.x * power, verticalVelocity, direction.z * power);
     
@@ -95,6 +101,7 @@ export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, sh
     const distanceToKeeper = flatDistance(player.position, keeper.position);
     const keeperCanBeKicked = !state.gameOver
         && !state.isResetting
+        && elapsedTime >= state.keeperGetUpUntil
         && distanceToKeeper < 1.05;
     if (!keeperCanBeKicked) return false;
 
@@ -114,6 +121,7 @@ export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, sh
     const knockdownDuration = THREE.MathUtils.lerp(KEEPER_MIN_KNOCKDOWN_DURATION, KEEPER_MAX_KNOCKDOWN_DURATION, THREE.MathUtils.clamp(powerRatio, 0, 1));
     state.keeperDownUntil = Math.max(state.keeperDownUntil, elapsedTime + knockdownDuration);
     state.keeperGetUpUntil = state.keeperDownUntil + 0.6;
+    keeper.userData.knockdown = makeKnockdown(elapsedTime, powerRatio);
     state.keeperChargeUntil = state.keeperGetUpUntil + 0.45;
     state.lastKeeperKnockdownTime = elapsedTime;
     state.keeperSave = null;
@@ -138,6 +146,32 @@ export function kickDownKeeper({ state, player, keeper, referee, elapsedTime, sh
         if (onKeeperTaunt) onKeeperTaunt(taunt);
         showMessage(`你把门将踢倒了！眩晕 ${knockdownDuration.toFixed(1)} 秒`);
     }
+    return true;
+}
+
+export function findKnockdownTarget({state,player,keeper,defender,elapsedTime}) {
+    return [keeper,defender].filter(target=>target&&target.visible!==false
+        && !(target===keeper&&elapsedTime<state.keeperGetUpUntil)
+        && !isKnockedDown(target.userData.knockdown,elapsedTime)
+        && flatDistance(player.position,target.position)<KNOCKDOWN.range)
+        .sort((a,b)=>flatDistance(player.position,a.position)-flatDistance(player.position,b.position))[0];
+}
+
+export function kickDownOpponent(context, powerRatio = 0.65) {
+    const {state,player,keeper,defender,referee,elapsedTime,showMessage,onKeeperHit,onRefereeFoul}=context;
+    if(state.gameOver||state.isResetting||state.pendingRefereeFailure)return false;
+    const target=context.target||findKnockdownTarget(context);
+    if(!target||target.visible===false||flatDistance(player.position,target.position)>=KNOCKDOWN.range||isKnockedDown(target.userData.knockdown,elapsedTime))return false;
+    if(target===keeper)return kickDownKeeper(context,powerRatio);
+    if(target!==defender)return false;
+    target.userData.knockdown=makeKnockdown(elapsedTime,powerRatio);
+    target.userData.velocity.set(0,0,0);target.userData.hitFlashUntil=elapsedTime+0.25;
+    if(target.userData.defense){target.userData.defense.tackle=null;target.userData.defense.readyAt=target.userData.knockdown.getUpUntil;target.userData.defense.nextTackleAt=target.userData.knockdown.getUpUntil+0.2;}
+    onKeeperHit?.(powerRatio);
+    if(referee&&isInRefereeVision(player.position,referee)){
+        state.pendingRefereeFailure=true;state.refereeWarningUntil=elapsedTime+1;state.refereeWarningMessage='裁判吹罚：踢倒后卫，踢人犯规！';
+        showMessage(state.refereeWarningMessage);onRefereeFoul?.(state.refereeWarningMessage);
+    }else showMessage(`后卫被踢倒！眩晕 ${(target.userData.knockdown.downUntil-elapsedTime).toFixed(1)} 秒`);
     return true;
 }
 

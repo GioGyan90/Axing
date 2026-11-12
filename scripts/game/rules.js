@@ -276,12 +276,9 @@ export function kickDownKeeperWrapper({ state, player, keeper, referee, elapsedT
 export function updateReferee({ dt, state, referee, player, keeper, elapsedTime }) {
     if (!referee) return;
     const patrolPhase = elapsedTime * 0.55;
-    const playerSide = player.position.x >= 0 ? -1 : 1;
-    const sidelineOffset = FIELD.width / 2 + 0.3;
-    const sidelineShadow = playerSide * sidelineOffset;
-    const sweep = Math.sin(patrolPhase) * 1.05;
+    const sidelineOffset = FIELD.width / 2 + 0.85;
     const target = new THREE.Vector3(
-        THREE.MathUtils.clamp(sidelineShadow + sweep, -FIELD.width / 2 - 0.5, FIELD.width / 2 + 0.5),
+        -sidelineOffset,
         0,
         THREE.MathUtils.clamp(player.position.z + 1.7 + Math.cos(patrolPhase * 0.8) * 0.8, FIELD.goalZ + 1.0, FIELD.depth / 2 - 1.05)
     );
@@ -289,6 +286,7 @@ export function updateReferee({ dt, state, referee, player, keeper, elapsedTime 
     if (state.gameOver) {
         referee.userData.velocity.set(0, 0, 0);
     } else {
+        referee.position.x = -sidelineOffset;
         moveKeeperToward(referee, target, REFEREE_PATROL_SPEED, dt);
     }
 
@@ -558,6 +556,7 @@ export function updateKeeper({ dt, state, keeper, ball, elapsedTime, onKeeperSav
     updateGoalkeeperAnimation(keeper, { dt, elapsedTime, movement: keeper.userData.velocity });
 
     keeper.scale.set(1, 1, 1);
+    keeper.userData.knockdown = null;
     if (state.keeperState === KEEPER_STATE.CHARGE
         && flatDistance(keeper.position, ball.position) < profile.tackleRadius
         && ballIsPlayable
@@ -661,6 +660,7 @@ export function resetRound({ state, player, keeper, referee, defender, ball, sho
     keeper.position.set(0, 0, FIELD.goalZ + 0.72);
     keeper.rotation.y = 0;
     keeper.scale.set(1, 1, 1);
+    keeper.userData.knockdown = null;
     ball.position.set(0, BALL_GROUND_Y, 2.65);
     state.ballVelocity.set(0, 0, 0);
     cancelKickCharge(state);
@@ -691,7 +691,7 @@ export function resetRound({ state, player, keeper, referee, defender, ball, sho
     player.userData.facing.set(0, 0, -1);
     player.rotation.y = Math.PI;
     if (referee) {
-        const sidelineOffset = FIELD.width / 2 + 0.3;
+        const sidelineOffset = FIELD.width / 2 + 0.85;
         referee.position.set(-sidelineOffset, 0, 1.35);
         referee.rotation.y = Math.PI * 0.35;
         referee.userData.velocity.set(0, 0, 0);

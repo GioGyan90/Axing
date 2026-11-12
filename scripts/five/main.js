@@ -1,10 +1,15 @@
-import {createMatch,startMatch,stepMatch,requestPass,beginCharge,releaseShot,switchPlayer,continueMatch,attackDirection,totalGoals,beginShootout} from './engine.js';
+import {createMatch,startMatch,stepMatch,requestPass,beginCharge,releaseShot,requestKnockdown,switchPlayer,continueMatch,attackDirection,totalGoals,beginShootout} from './engine.js';
 import {createView} from './view.js';
+import {goalConfettiFor} from '../game/confetti.js';
+import {isKnockedDown} from '../game/knockdown.js';
 const $=id=>document.getElementById(id),keys=new Set();
 let state=createMatch(),stick={x:0,z:0},aimWorld=null,last=performance.now(),accumulator=0,lastHalf=1;
 const view=createView($('pitch'));
+const confetti=goalConfettiFor($('goal-confetti'));let lastGoalSerial=0;
 const review=['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('review');
+let reviewFrozen=false,reviewFreezeAt=Infinity,reviewTriggered=false;
 if(review)$('review-controls').hidden=false;
+function resetReview(){reviewFrozen=false;reviewFreezeAt=Infinity;reviewTriggered=false;}
 function text(id,value){if($(id).textContent!==String(value))$(id).textContent=value;}
 function input(){
     const a=state.players[state.controlledId];
@@ -18,12 +23,13 @@ function updateDemoButton(){$('demo').setAttribute('aria-pressed',state.autoBlue
 function shootDown(){manual();beginCharge(state);}
 function shootUp(){releaseShot(state,input().aim);}
 function pass(){manual();requestPass(state,input().aim);}
+function knock(){if(state.phase!=='playing'||state.paused)return;manual();if(!requestKnockdown(state))state.lastEvent='靠近未眩晕的对方球员，再按 F 踢人';}
 function togglePause(){if(!['ready','finished'].includes(state.phase)){state.paused=!state.paused;keys.clear();stick={x:0,z:0};state.charging=false;}}
-$('start').onclick=()=>{if(state.phase==='ready')startMatch(state);else if(state.phase==='halftime')continueMatch(state);else if(state.phase==='finished'){state=createMatch();startMatch(state);}else state.paused=false;updateDemoButton();};
-$('restart').onclick=()=>{state=createMatch({autoBlue:state.autoBlue});aimWorld=null;keys.clear();startMatch(state);};
+$('start').onclick=()=>{resetReview();if(state.phase==='ready')startMatch(state);else if(state.phase==='halftime')continueMatch(state);else if(state.phase==='finished'){state=createMatch();lastGoalSerial=0;confetti.clear();startMatch(state);}else state.paused=false;updateDemoButton();};
+$('restart').onclick=()=>{resetReview();state=createMatch({autoBlue:state.autoBlue});aimWorld=null;lastGoalSerial=0;confetti.clear();keys.clear();startMatch(state);updateDemoButton();};
 $('pause').onclick=togglePause;
 $('demo').onclick=()=>{state.autoBlue=!state.autoBlue;state.charging=false;updateDemoButton();};
-$('pass').onclick=pass;$('switch').onclick=()=>{manual();switchPlayer(state);};
+$('pass').onclick=pass;$('knock').onclick=knock;$('switch').onclick=()=>{manual();switchPlayer(state);};
 $('shoot').addEventListener('pointerdown',e=>{e.preventDefault();$('shoot').setPointerCapture(e.pointerId);shootDown();});
 $('shoot').addEventListener('pointerup',e=>{e.preventDefault();shootUp();});
 $('shoot').addEventListener('pointercancel',()=>{state.charging=false;});
@@ -35,7 +41,7 @@ window.addEventListener('keydown',e=>{
     if(e.code==='Escape'){togglePause();return;}
     if(state.paused||state.phase==='ready'||state.phase==='finished')return;
     if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))manual();
-    if(e.code==='Space')shootDown();if(e.code==='KeyE')pass();if(e.code==='KeyQ'){manual();switchPlayer(state);}
+    if(e.code==='Space')shootDown();if(e.code==='KeyE')pass();if(e.code==='KeyF')knock();if(e.code==='KeyQ'){manual();switchPlayer(state);}
 });
 window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Space')shootUp();});
 window.addEventListener('blur',()=>{keys.clear();stick={x:0,z:0};state.charging=false;});
@@ -59,6 +65,9 @@ function updateUI(){
     const seconds=Math.max(0,Math.ceil(state.remaining));text('clock',`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`);
     text('period',state.phase==='shootout'?'点球大战':state.phase==='finished'?'比赛结束':state.half===1?'上半场':'下半场');
     text('passes-blue',state.stats[0].passes);text('passes-orange',state.stats[1].passes);
+    const stunned=state.players.filter(a=>a.team===1&&isKnockedDown(a.knockdown,state.time));
+    text('referee-status',state.phase==='foul'?'裁判吹罚 · 橙队任意球':`场外裁判 · ${stunned.length?`对方 ${stunned.length} 人眩晕中`:'视野内踢人犯规'}`);
+    $('knock').disabled=state.phase!=='playing'||state.paused;
     const a=state.players[state.controlledId],owner=state.ball.owner==null?null:state.players[state.ball.owner];
     text('controlled',`蓝队 ${a.number} 号${a.role==='keeper'?' · 门将':''}`);text('possession',owner?`${owner.team===0?'蓝':'橙'}队 ${owner.number} 号控球`:'争夺自由球');
     text('direction',state.shootout?(state.shootout.turn===0?'点球进攻方向 ↑':'守门：左右移动 + 射门键扑救'):`蓝队进攻方向 ${attackDirection(state,0)<0?'↑':'↓'}`);text('event',state.lastEvent);
@@ -74,7 +83,7 @@ function updateUI(){
     const overlay=state.phase==='ready'||state.phase==='halftime'||state.phase==='finished'||state.paused;
     $('screen').hidden=!overlay;$('format').hidden=state.phase!=='ready';
     if(overlay){
-        if(state.phase==='ready'){text('screen-title','来一场笼式足球');text('screen-body','蓝队由你控制，队友跑位接应。双方各 1 名门将、4 名球员，八角笼内连续对抗。');text('screen-detail','球碰笼壁会反弹，不设出界。平局双方各罚 5 轮点球，仍平则逐轮加罚。');text('start','开始比赛');}
+        if(state.phase==='ready'){text('screen-title','来一场笼式足球');text('screen-body','蓝队由你控制，队友跑位接应。射门自动朝对方门框，F 可踢倒附近对手，场外裁判看见会吹罚。');text('screen-detail','球碰笼壁会反弹，不设出界。平局双方各罚 5 轮点球，仍平则逐轮加罚。');text('start','开始比赛');}
         else if(state.phase==='finished'){text('screen-title',state.winner===0?'蓝队获胜！':'橙队获胜');text('screen-body',`常规时间 ${state.scores[0]} : ${state.scores[1]}${state.shootout?` · 点球 ${totalGoals(state.shootout.results[0])} : ${totalGoals(state.shootout.results[1])}`:''}`);text('screen-detail',`蓝队完成 ${state.stats[0].passes} 次传球、${state.stats[0].shots} 次射门。再来一场配合进攻吧。`);text('start','再赛一场');}
         else if(state.paused){text('screen-title','比赛已暂停');text('screen-body','比分、计时和球员位置已保留。');text('screen-detail','E 传球 · Q 切换 · Space 射门 / 抢断。点球守门时左右移动并选择时机扑救。');text('start','继续比赛');}
         else{text('screen-title','中场休息 · 交换场地');text('screen-body',`蓝队 ${state.scores[0]} : ${state.scores[1]} 橙队`);text('screen-detail',`下半场 90 秒，橙队开球。${Math.max(0,Math.ceil(state.phaseTimer))} 秒后继续。`);text('start','下半场开球');}
@@ -84,14 +93,33 @@ function resize(){view.resize(innerWidth,innerHeight);}
 window.addEventListener('resize',resize);resize();
 function frame(now){
     const delta=Math.min(0.5,Math.max(0,(now-last)/1000));last=now;
-    if(!state.paused){accumulator+=delta;let steps=0;while(accumulator>=1/60&&steps++<31){stepMatch(state,1/60,input());accumulator-=1/60;}}
+    if(!state.paused&&!reviewFrozen){accumulator+=delta;let steps=0;while(accumulator>=1/60&&steps++<31){
+        stepMatch(state,1/60,input());accumulator-=1/60;
+        if(review&&$('review-hold').checked){
+            if(!reviewTriggered&&(state.stats[0].knockdowns||state.goalSerial)){reviewTriggered=true;reviewFreezeAt=state.time+0.35;}
+            if(state.time>=reviewFreezeAt){reviewFrozen=true;accumulator=0;break;}
+        }
+    }}
     else accumulator=0;
     if(lastHalf!==state.half){aimWorld=null;lastHalf=state.half;}
-    view.render(state,Math.min(delta,0.033));updateUI();requestAnimationFrame(frame);
+    if(state.goalSerial>lastGoalSerial)confetti.burst();lastGoalSerial=state.goalSerial;
+    view.render(state,Math.min(delta,0.033));confetti.tick(delta,state.paused||reviewFrozen);updateUI();
+    if(review)text('review-label',reviewFrozen?'检查画面已冻结':'');requestAnimationFrame(frame);
 }
 if(review){
-    $('review-half').onclick=()=>{state.paused=false;if(['ready','kickoff','goal'].includes(state.phase))state.phase='playing';state.remaining=0.02;};
-    $('review-tie').onclick=()=>{state.paused=false;state.phase='playing';state.half=2;state.remaining=0.02;state.scores=[0,0];state.charging=false;};
+    function scenario(kind){
+        state=createMatch();state.phase='playing';state.time=10;reviewFrozen=false;reviewTriggered=false;reviewFreezeAt=Infinity;lastGoalSerial=0;confetti.clear();keys.clear();
+        for(const a of state.players){a.x=a.team?5:-5;a.z=6+a.slot;a.cooldown=999;}
+        const x=kind==='foul'?-7.1:kind==='goal'?4:0,a=state.players[4],victim=state.players[9];
+        Object.assign(a,{x,z:kind==='goal'?-7:1,fx:0,fz:-1,cooldown:0});Object.assign(victim,{x,z:0.1,fx:0,fz:1});
+        if(kind==='goal')Object.assign(state.players[5],{x:-5,z:8});
+        Object.assign(state.ball,{owner:4,x,y:0.23,z:a.z-0.56,lastTouch:4});
+        aimWorld=kind==='goal'?{x:100,z:8}:null;state.lastEvent=kind==='goal'?'鼠标在身后 · 按射门检查自动瞄准':kind==='foul'?'靠近场外裁判 · 按 F 检查吹罚':'按 F 踢人 · 检查倒地与眩晕';updateDemoButton();
+    }
+    $('review-knock').onclick=()=>scenario('knock');$('review-foul').onclick=()=>scenario('foul');$('review-goal').onclick=()=>scenario('goal');
+    $('review-hold').onchange=()=>{reviewFrozen=false;reviewFreezeAt=Infinity;reviewTriggered=true;};
+    $('review-half').onclick=()=>{resetReview();state.paused=false;if(['ready','kickoff','goal'].includes(state.phase))state.phase='playing';state.remaining=0.02;};
+    $('review-tie').onclick=()=>{resetReview();state.paused=false;state.phase='playing';state.half=2;state.remaining=0.02;state.scores=[0,0];state.charging=false;};
     $('review-penalty').onclick=()=>{if(!state.shootout||state.phase==='finished')return;state.paused=false;const count=state.shootout.results.flat().length;const old=state.autoBlue;state.autoBlue=true;for(let i=0;i<900&&state.phase!=='finished'&&state.shootout.results.flat().length===count;i++)stepMatch(state,1/120,{});state.autoBlue=old;};
 }
 requestAnimationFrame(frame);

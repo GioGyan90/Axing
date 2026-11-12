@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { FIELD } from './config.js';
+import {BALL_RADIUS} from './config.js';
+import {goalDirection} from './goal-aim.js';
+import {goalConfettiFor} from './confetti.js';
 
 export function getGameElements() {
     return {
@@ -64,7 +67,7 @@ export function showResultOverlay(elements, { title, summary, won }) {
     elements.resultSummary.textContent = summary;
     elements.resultOverlay.classList.add('show');
     elements.resultOverlay.removeAttribute('aria-hidden');
-    if (won) playConfetti(elements.confettiCanvas);
+    if (won && !Number(elements.confettiCanvas.dataset.particles)) playConfetti(elements.confettiCanvas);
     // 将焦点移到重玩按钮上，确保辅助技术用户可以访问
     elements.replayBtn.focus();
 }
@@ -75,60 +78,10 @@ export function hideResultOverlay(elements) {
     stopConfetti(elements.confettiCanvas);
 }
 
-function playConfetti(canvas) {
-    const context = canvas.getContext('2d');
-    const colors = ['#66f7c7', '#ffd166', '#6db7ff', '#ff596f', '#ffffff'];
-    const resize = () => {
-        canvas.width = window.innerWidth * window.devicePixelRatio;
-        canvas.height = window.innerHeight * window.devicePixelRatio;
-        context.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-    };
-    resize();
-    stopConfetti(canvas);
-    const pieces = Array.from({ length: 150 }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: -30 - Math.random() * window.innerHeight * 0.45,
-        size: 6 + Math.random() * 9,
-        speed: 2.4 + Math.random() * 4.4,
-        drift: -2 + Math.random() * 4,
-        rotation: Math.random() * Math.PI * 2,
-        spin: -0.22 + Math.random() * 0.44,
-        color: colors[Math.floor(Math.random() * colors.length)],
-    }));
-    const draw = () => {
-        context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        pieces.forEach((piece) => {
-            piece.y += piece.speed;
-            piece.x += piece.drift + Math.sin(piece.y * 0.018) * 0.8;
-            piece.rotation += piece.spin;
-            if (piece.y > window.innerHeight + 30) {
-                piece.y = -30;
-                piece.x = Math.random() * window.innerWidth;
-            }
-            context.save();
-            context.translate(piece.x, piece.y);
-            context.rotate(piece.rotation);
-            context.fillStyle = piece.color;
-            context.fillRect(-piece.size / 2, -piece.size / 3, piece.size, piece.size * 0.58);
-            context.restore();
-        });
-        canvas.dataset.confettiFrame = window.requestAnimationFrame(draw);
-    };
-    window.addEventListener('resize', resize, { once: true });
-    draw();
-    canvas.dataset.confettiTimer = window.setTimeout(() => stopConfetti(canvas), 5200);
-}
+function playConfetti(canvas) { goalConfettiFor(canvas).burst(); }
+function stopConfetti(canvas) { goalConfettiFor(canvas).clear(); }
 
-function stopConfetti(canvas) {
-    if (canvas.dataset.confettiFrame) window.cancelAnimationFrame(Number(canvas.dataset.confettiFrame));
-    if (canvas.dataset.confettiTimer) window.clearTimeout(Number(canvas.dataset.confettiTimer));
-    const context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    delete canvas.dataset.confettiFrame;
-    delete canvas.dataset.confettiTimer;
-}
-
-export function bindKeyboard({ keys, onKickStart, onKickRelease, onBackDoubleTap }) {
+export function bindKeyboard({ keys, onKickStart, onKnockStart, onKickRelease, onBackDoubleTap }) {
     let lastBackTapAt = 0;
     window.addEventListener('keydown', (event) => {
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
@@ -136,6 +89,7 @@ export function bindKeyboard({ keys, onKickStart, onKickRelease, onBackDoubleTap
             if (!event.repeat) onKickStart();
             return;
         }
+        if(event.code==='KeyF'){if(!event.repeat)onKnockStart?.();return;}
         if ((event.code === 'ArrowDown' || event.code === 'KeyS') && !event.repeat) {
             const now = performance.now();
             if (now - lastBackTapAt <= 320) {
@@ -148,7 +102,7 @@ export function bindKeyboard({ keys, onKickStart, onKickRelease, onBackDoubleTap
         keys.add(event.code);
     });
     window.addEventListener('keyup', (event) => {
-        if (event.code === 'Space') {
+        if (event.code === 'Space'||event.code==='KeyF') {
             onKickRelease();
             return;
         }
@@ -156,7 +110,7 @@ export function bindKeyboard({ keys, onKickStart, onKickRelease, onBackDoubleTap
     });
 }
 
-export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCancel, onBackDoubleTap }) {
+export function bindTouchControls({ keys, onKickStart, onKnockStart, onKickRelease, onKickCancel, onBackDoubleTap }) {
     let lastBackTapAt = 0;
     document.querySelectorAll('[data-key]').forEach((button) => {
         const key = button.dataset.key;
@@ -166,6 +120,7 @@ export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCanc
                 onKickStart();
                 return;
             }
+            if(key==='KeyF'){onKnockStart?.();return;}
             if (key === 'ArrowDown' || key === 'KeyS') {
                 const now = performance.now();
                 if (now - lastBackTapAt <= 320) {
@@ -177,9 +132,9 @@ export function bindTouchControls({ keys, onKickStart, onKickRelease, onKickCanc
             }
             keys.add(key);
         });
-        button.addEventListener('pointerup', () => { if (key === 'Space') onKickRelease(); else keys.delete(key); });
-        button.addEventListener('pointercancel', () => { if (key === 'Space') onKickCancel(); else keys.delete(key); });
-        button.addEventListener('pointerleave', () => { if (key === 'Space') onKickRelease(); else keys.delete(key); });
+        button.addEventListener('pointerup', () => { if (key === 'Space'||key==='KeyF') onKickRelease(); else keys.delete(key); });
+        button.addEventListener('pointercancel', () => { if (key === 'Space'||key==='KeyF') onKickCancel(); else keys.delete(key); });
+        button.addEventListener('pointerleave', () => { if (key === 'Space'||key==='KeyF') onKickRelease(); else keys.delete(key); });
     });
 }
 
@@ -268,14 +223,8 @@ export function createPointerAim(camera) {
 
 export function createAimDirectionGetter(aimPoint, ball) {
     return () => {
-        const target = aimPoint.clone();
-        if (!Number.isFinite(target.x) || flatDistance(target, ball.position) < 0.25) {
-            target.set(0, 0, FIELD.goalZ - 1);
-        }
-        const direction = target.sub(ball.position);
-        direction.y = 0;
-        if (direction.lengthSq() < 0.001) direction.set(0, 0, -1);
-        return direction.normalize();
+        const d=goalDirection(ball.position,{goalZ:FIELD.goalZ-0.5,lineZ:FIELD.goalZ,halfWidth:2.65,ballRadius:BALL_RADIUS,preferredX:aimPoint.x});
+        return new THREE.Vector3(d.x,0,d.z);
     };
 }
 

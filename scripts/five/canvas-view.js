@@ -1,4 +1,6 @@
 import {CAGE,VERTICES,choosePassTarget} from './engine.js';
+import {isKnockedDown,getUpProgress} from '../game/knockdown.js';
+import {REFEREE_VISION} from '../game/config.js';
 
 // Fast, playable projected view when WebGL is unavailable. It renders the same
 // simulation, including the octagonal walls, all ten players and ball height.
@@ -49,11 +51,12 @@ export function createCanvasView(canvas){
         const q=p(a.x,0,a.z),size=scale*0.9,team=a.team===0;
         ctx.save();ctx.translate(q.x,q.y);
         ctx.fillStyle='#071f293b';ctx.beginPath();ctx.ellipse(0,1,size*0.48,size*0.15,0,0,Math.PI*2);ctx.fill();
-        let tilt=0;if(a.dive)tilt=-a.dive.side*Math.sin(Math.min(1,(s.time-a.dive.started)/0.8)*Math.PI)*0.95;
+        const knocked=isKnockedDown(a.knockdown,s.time),recovery=getUpProgress(a.knockdown,s.time);
+        let tilt=0;if(knocked)tilt=-Math.PI/2*(1-recovery);else if(a.dive)tilt=-a.dive.side*Math.sin(Math.min(1,(s.time-a.dive.started)/0.8)*Math.PI)*0.95;
         ctx.translate(0,-size*0.57);ctx.rotate(tilt);ctx.translate(0,size*0.57);
         const moving=Math.min(1,Math.hypot(a.vx,a.vz)/5),stride=Math.sin(s.time*13+a.id)*moving*size*0.14;
         const action=a.action?Math.sin(Math.min(1,a.action.age/0.64)*Math.PI)*size*0.25:0;
-        const skin=a.team===0?'#efc194':'#cc996d',shirt=a.role==='keeper'?(team?'#ccea7c':'#f175aa'):(team?'#39b4f0':'#ff9a43'),side=team?'#197bb4':'#cd602c',shorts=team?'#16476b':'#693a30';
+        const ref=a.role==='referee',skin=a.team===0?'#efc194':'#cc996d',shirt=ref?'#ebd35c':a.role==='keeper'?(team?'#ccea7c':'#f175aa'):(team?'#39b4f0':'#ff9a43'),side=ref?'#b29c38':team?'#197bb4':'#cd602c',shorts=ref?'#24323a':team?'#16476b':'#693a30';
         for(const sign of [-1,1]){
             const footX=sign*size*0.12+(sign<0?a.fx*action:0),footY=sign*stride+(sign<0?a.fz*action*0.56-action*0.2:0);
             line({x:sign*size*0.12,y:-size*0.53},{x:footX,y:-size*0.07+footY},shorts,size*0.16);
@@ -62,7 +65,7 @@ export function createCanvasView(canvas){
         }
         box(-size*0.27,-size*1.03,size*0.54,size*0.52,size*0.10,shirt,side,team?'#75d2f5':'#ffbc6c');
         for(const sign of [-1,1]){
-            const handX=sign*size*(a.dive?0.44:0.31),handY=-size*0.55+sign*stride*0.4-(a.dive?size*0.38:0);
+            const handX=sign*size*(a.dive?0.44:0.31),handY=-size*0.55+sign*stride*0.4-(a.dive?size*0.38:ref&&a.whistling?size*0.65:0);
             line({x:sign*size*0.3,y:-size*0.96},{x:handX,y:handY},skin,size*0.13);
             if(a.role==='keeper')box(handX-size*0.07,handY-size*0.02,size*0.15,size*0.14,0,'#fff8dd','#e5dac5','#fff8dd');
         }
@@ -72,14 +75,22 @@ export function createCanvasView(canvas){
         const facing=a.fz>=0?1:-1;ctx.fillStyle='#263339';const eyeY=-size*1.35;
         if(facing>0){ctx.fillRect(-size*0.12,eyeY,size*0.06,size*0.05);ctx.fillRect(size*0.08,eyeY,size*0.06,size*0.05);}
         ctx.restore();
+        if(knocked){
+            const head={x:q.x+Math.sin(tilt)*size*0.78,y:q.y-size*(0.57+Math.cos(tilt)*0.78)-size*0.30};
+            ctx.fillStyle='#ffdc6b';ctx.textAlign='center';ctx.font=`bold ${Math.max(10,size*0.32)}px system-ui`;
+            for(let i=0;i<3;i++){const angle=s.time*4+i*Math.PI*2/3;ctx.fillText('★',head.x+Math.cos(angle)*size*0.4,head.y+Math.sin(angle)*size*0.12);}
+        }
     }
     return {kind:'canvas',canvas,
-        resize(w,h){width=w;height=h;const dpr=Math.min(devicePixelRatio,2);canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);scale=Math.min(w/(w/h<0.8?18.8:24),h/21.5);cx=w/2;cy=h/2+scale*0.7;},
+        resize(w,h){width=w;height=h;const dpr=Math.min(devicePixelRatio,2);canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);scale=Math.min(w/(w/h<0.8?20.8:24),h/21.5);cx=w/2;cy=h/2+scale*0.7;},
         toField(x,y){const r=canvas.getBoundingClientRect();return {x:(x-r.left-cx)/scale,z:(y-r.top-cy)/(scale*0.56)};},
         render(s){
             const bg=ctx.createRadialGradient(width/2,height/2,10,width/2,height/2,width*0.7);bg.addColorStop(0,'#23475a');bg.addColorStop(1,'#0b2031');ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);
             poly(VERTICES.map(([x,z])=>[x,-0.3,z]),'#0d2737','#38606b',2);
             poly(VERTICES.map(([x,z])=>[x,0.04,z]),'#278d76','#87bdb1',1.5);
+            const r=s.referee,angle=Math.atan2(r.fz,r.fx),fan=[[r.x,0.08,r.z]];
+            for(let i=0;i<=20;i++){const a=angle-REFEREE_VISION.halfAngle+i/20*REFEREE_VISION.halfAngle*2;fan.push([r.x+Math.cos(a)*REFEREE_VISION.radius,0.08,r.z+Math.sin(a)*REFEREE_VISION.radius]);}
+            poly(fan,'#baff8c26','#b8d96c44',0.7);
             // Alternating inset stripes follow the same clipped octagon.
             for(let z=-10;z<=10;z+=4){const w=8-Math.max(0,Math.abs(z)+1-9.4);poly([[-w,0.05,z-1],[w,0.05,z-1],[w,0.05,z+1],[-w,0.05,z+1]],'#30977c');}
             line(p(-8,0.07,0),p(8,0.07,0),'#d7f4d9aa',1.2);circle(0,0,2.1,'#d7f4d9aa',1.2);
@@ -88,7 +99,7 @@ export function createCanvasView(canvas){
             const a=s.players[s.controlledId];circle(a.x,a.z,0.66,'#a4ffd5',2.8);
             const owner=s.ball.owner==null?null:s.players[s.ball.owner],target=owner?.team===0?choosePassTarget(s,owner):null;
             if(s.phase==='playing'&&target)circle(target.x,target.z,0.62,'#ffe19a',1.7);
-            const objects=[...s.players.map(a=>({z:a.z,draw:()=>actor(a,s)})),{z:s.ball.z,draw:()=>{
+            const objects=[...s.players.map(a=>({z:a.z,draw:()=>actor(a,s)})),{z:r.z,draw:()=>actor({...r,id:11,number:'R',role:'referee',team:2,whistling:s.time<r.warningUntil},s)},{z:s.ball.z,draw:()=>{
                 const b=s.ball,shadow=p(b.x,0,b.z),q=p(b.x,b.y,b.z),r=CAGE.ballRadius*scale;
                 ctx.fillStyle='#102e4244';ctx.beginPath();ctx.ellipse(shadow.x,shadow.y,r*1.1,r*0.5,0,0,Math.PI*2);ctx.fill();
                 ctx.fillStyle='#fff9e9';ctx.beginPath();ctx.arc(q.x,q.y,r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#2b4554';ctx.beginPath();ctx.arc(q.x-r*0.15,q.y-r*0.08,r*0.36,0,Math.PI*2);ctx.fill();

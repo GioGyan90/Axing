@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {BALL_RADIUS, FIELD, DEFENDER_PROFILE as PROFILE} from './config.js';
 import {updatePlayerAnimation} from './player-animation.js';
 import {MOTION_TIMING} from './football-motion.js';
+import {isKnockedDown,getUpProgress} from './knockdown.js';
 
 export function resetDefender({state, defender, elapsedTime = 0}) {
     const enabled = state.keeperLevel === PROFILE.level;
@@ -10,6 +11,7 @@ export function resetDefender({state, defender, elapsedTime = 0}) {
     defender.rotation.set(0, 0, 0);
     defender.userData.velocity.set(0, 0, 0);
     defender.userData.facing.set(0, 0, 1);
+    defender.userData.knockdown = null;
     defender.userData.defense = {enabled, readyAt: elapsedTime + PROFILE.gracePeriod,
         nextTackleAt: 0, tackle: null, steals: 0};
     defender.userData.pose.lastPosition.copy(defender.position);
@@ -27,6 +29,11 @@ export function syncDefenderDifficulty({state, defender, elapsedTime = 0}) {
 export function updateDefender({dt, state, defender, player, ball, elapsedTime, onSteal = () => {}}) {
     if (!syncDefenderDifficulty({state, defender, elapsedTime})) return;
     const ai = defender.userData.defense;
+    if(isKnockedDown(defender.userData.knockdown,elapsedTime)){
+        ai.tackle=null;defender.userData.velocity.set(0,0,0);
+        updatePlayerAnimation(defender,{dt,elapsedTime,knocked:true,getUpProgress:getUpProgress(defender.userData.knockdown,elapsedTime)});
+        return;
+    }
     if (state.gameOver || state.isResetting || state.pendingRefereeFailure || state.pendingSaveNotification) {
         ai.tackle = null;
         defender.userData.velocity.set(0, 0, 0);

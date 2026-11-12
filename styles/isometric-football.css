@@ -242,3 +242,5 @@ html, body {
     .records-table { font-size: 0.82rem; }
     .records-table th, .records-table td { padding: 8px 4px; }
 }
+.kick-actions{display:flex;flex-direction:column;gap:8px;pointer-events:auto}.kick-actions .kick{height:62px;border-radius:20px;font-size:14px}.kick-actions [data-key="KeyF"]{background:linear-gradient(135deg,#ffc593,#ed8f61)}
+@media(max-width:760px){.desktop-knock{display:none}}

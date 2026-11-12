@@ -1,3 +1,6 @@
+import {goalTarget} from '../game/goal-aim.js';
+import {KNOCKDOWN,makeKnockdown,isKnockedDown} from '../game/knockdown.js';
+import {REFEREE_VISION} from '../game/config.js';
 // Renderer-independent match simulation. Metres, seconds; both renderers use
 // these exact players, ball, clock, contacts and shootout results.
 export const CAGE = Object.freeze({halfWidth:8,halfLength:12,cut:2.6,height:3.2,goalHalf:2.1,goalHeight:2,ballRadius:0.23,playerRadius:0.38});
@@ -18,18 +21,39 @@ export function createMatch({seed=12345,autoBlue=false}={}) {
     const s={seed,autoBlue,time:0,half:1,remaining:HALF_SECONDS,phase:'ready',phaseTimer:0,scores:[0,0],winner:null,
         players:[],controlledId:4,ball:{x:0,y:CAGE.ballRadius,z:0,vx:0,vy:0,vz:0,owner:null,lastTouch:null,lockUntil:0,kicker:null},
         charging:false,charge:0,chargeStart:0,shootout:null,events:[],serial:0,lastEvent:'准备开赛',
-        stats:[{passes:0,shots:0,tackles:0,saves:0},{passes:0,shots:0,tackles:0,saves:0}],paused:false};
+        stats:[{passes:0,shots:0,tackles:0,saves:0,knockdowns:0,fouls:0},{passes:0,shots:0,tackles:0,saves:0,knockdowns:0,fouls:0}],paused:false,
+        goalSerial:0,referee:{x:-9.15,z:1.5,fx:1,fz:0,vx:0,vz:0,warningUntil:0},freeKick:null};
     for(let team=0;team<2;team++) for(let slot=0;slot<5;slot++) s.players.push({id:team*5+slot,team,slot,number:slot+1,
-        role:slot===0?'keeper':'field',x:0,z:0,vx:0,vz:0,fx:0,fz:team===0?-1:1,cooldown:0,action:null,dive:null,heldSince:0});
+        role:slot===0?'keeper':'field',x:0,z:0,vx:0,vz:0,fx:0,fz:team===0?-1:1,cooldown:0,action:null,dive:null,heldSince:0,knockdown:null});
     placeKickoff(s,0);s.phase='ready';return s;
 }
 function emit(s,text){s.lastEvent=text;s.events.push({id:++s.serial,time:s.time,text});if(s.events.length>40)s.events.shift();}
 export function startMatch(s){if(s.phase!=='ready')return false;s.phase='kickoff';s.phaseTimer=1.4;emit(s,'蓝队开球');return true;}
 function stopActions(s){s.charging=false;s.charge=0;for(const a of s.players){a.action=null;a.dive=null;a.vx=a.vz=0;}}
+export function refereeSees(s,target){
+    const r=s.referee,dx=target.x-r.x,dz=target.z-r.z,length=Math.hypot(dx,dz);
+    return length>0.001&&length<=REFEREE_VISION.radius&&(dx*r.fx+dz*r.fz)/length>=Math.cos(REFEREE_VISION.halfAngle)-1e-9;
+}
+function moveReferee(s,dt){
+    const r=s.referee,b=s.ball,before=r.z,target=clamp(b.z*0.8,-9.2,9.2);
+    r.x=-CAGE.halfWidth-1.15;r.z+=clamp(target-r.z,-3.2*dt,3.2*dt);r.vx=0;r.vz=(r.z-before)/dt;
+    const facing=norm(b.x-r.x,b.z-r.z);r.fx=facing.x;r.fz=facing.z;
+}
+function restartFreeKick(s){
+    const f=s.freeKick;
+    const candidates=teamPlayers(s,f.team).filter(a=>!isKnockedDown(a.knockdown,s.time)).sort((a,b)=>(a.role==='keeper')-(b.role==='keeper')||dist(a,f)-dist(b,f));
+    const taker=candidates[0];
+    if(taker){taker.x=f.x;taker.z=f.z;confineCircle(taker,CAGE.playerRadius);taker.fx=0;taker.fz=attackDirection(s,taker.team);taker.heldSince=s.time;
+        for(const a of s.players){if(a.id===taker.id||isKnockedDown(a.knockdown,s.time))continue;const length=dist(a,taker);if(length<1.8){const d=norm(a.x-taker.x||0.1,a.z-taker.z);a.x=taker.x+d.x*1.8;a.z=taker.z+d.z*1.8;confineCircle(a,CAGE.playerRadius);}}
+        Object.assign(s.ball,{owner:taker.id,lastTouch:taker.id,kicker:null,lockUntil:s.time+0.7,vx:0,vy:0,vz:0});attachBall(s);
+        if(taker.team===0&&taker.role==='field')s.controlledId=taker.id;
+    }
+    s.freeKick=null;s.phase='playing';emit(s,`${f.team===0?'蓝':'橙'}队任意球 · 继续比赛`);
+}
 function placeKickoff(s,team){
     stopActions(s);
     const slots=[[0,10.8],[-3.5,5],[3.5,4.4],[-2.5,0.8],[2.3,1.1]];
-    for(const a of s.players){const d=attackDirection(s,a.team);a.x=slots[a.slot][0];a.z=-d*slots[a.slot][1];a.fx=0;a.fz=d;a.cooldown=s.time+0.6;}
+    for(const a of s.players){const d=attackDirection(s,a.team);a.x=slots[a.slot][0];a.z=-d*slots[a.slot][1];a.fx=0;a.fz=d;a.cooldown=s.time+0.6;a.knockdown=null;}
     const carrier=s.players[team*5+4],d=attackDirection(s,team);carrier.x=0;carrier.z=-d*0.58;
     const opponent=s.players[(1-team)*5+4];opponent.x=2.3;opponent.z=-attackDirection(s,1-team)*2.5;
     s.controlledId=team===0?carrier.id:3;
@@ -50,28 +74,31 @@ export function insideCage(point,radius=0){return VERTICES.every((a,i)=>{const b
 function distanceToSegment(p,a,b){const dx=b.x-a.x,dz=b.z-a.z,t=clamp(((p.x-a.x)*dx+(p.z-a.z)*dz)/(dx*dx+dz*dz||1),0,1);return Math.hypot(p.x-a.x-dx*t,p.z-a.z-dz*t);}
 export function choosePassTarget(s,actor,aim){
     const d=aim||{x:0,z:attackDirection(s,actor.team)};
-    return teamPlayers(s,actor.team).filter(a=>a.id!==actor.id).map(a=>{
+    return teamPlayers(s,actor.team).filter(a=>a.id!==actor.id&&!isKnockedDown(a.knockdown,s.time)).map(a=>{
         const distance=dist(a,actor),v=norm(a.x-actor.x,a.z-actor.z),alignment=v.x*d.x+v.z*d.z;
-        const lane=Math.min(...s.players.filter(b=>b.team!==actor.team).map(b=>distanceToSegment(b,actor,a)));
+        const lane=Math.min(...s.players.filter(b=>b.team!==actor.team&&!isKnockedDown(b.knockdown,s.time)).map(b=>distanceToSegment(b,actor,a)));
         const score=alignment*3+Math.min(2,lane)-Math.abs(distance-5)*0.12+(a.role==='keeper'?-1:0);
         return {a,score};
     }).sort((a,b)=>b.score-a.score)[0]?.a;
 }
 function queueAction(s,a,kind,target,power=0.65){
-    if(a.action||s.time<a.cooldown)return false;
-    a.action={kind,target:{...target},power,age:0,fired:false};a.cooldown=s.time+(kind==='tackle'?1.15:0.7);
+    if(a.action||s.time<a.cooldown||isKnockedDown(a.knockdown,s.time))return false;
+    if(kind==='shot'&&s.phase==='playing')target=goalTarget(s.ball,{goalZ:attackDirection(s,a.team)*(CAGE.halfLength+0.5),lineZ:attackDirection(s,a.team)*CAGE.halfLength,halfWidth:CAGE.goalHalf,ballRadius:CAGE.ballRadius,preferredX:target.x});
+    a.action={kind,target:{...target},power,age:0,fired:false};a.cooldown=s.time+(['tackle','knockdown'].includes(kind)?1.15:0.7);
     const direction=norm(target.x-a.x,target.z-a.z);a.fx=direction.x;a.fz=direction.z;return true;
 }
 export function requestPass(s,aim){
-    if(s.phase!=='playing'||s.ball.owner==null)return false;
+    if(s.phase!=='playing'||s.paused||s.ball.owner==null)return false;
     const a=s.players[s.ball.owner];if(a.team!==0)return false;
     const target=choosePassTarget(s,a,aim);if(!target)return false;
     s.charging=false;return queueAction(s,a,'pass',{x:target.x+target.vx*0.22,z:target.z+target.vz*0.22,id:target.id});
 }
 export function beginCharge(s){
+    if(s.paused)return false;
     if(s.phase==='shootout'){if(s.shootout.stage==='aim'&&s.shootout.turn===0){s.charging=true;s.chargeStart=s.time;return true;}return requestDive(s);}
     if(s.phase!=='playing')return false;
     const a=controlledPlayer(s);
+    if(isKnockedDown(a.knockdown,s.time))return false;
     if(s.ball.owner!==a.id){return queueAction(s,a,'tackle',{x:s.ball.x,z:s.ball.z});}
     if(a.action)return false;s.charging=true;s.chargeStart=s.time;s.charge=0.18;return true;
 }
@@ -81,19 +108,37 @@ export function releaseShot(s,aim){
     if(s.phase==='shootout'&&s.shootout.turn===0&&s.shootout.stage==='aim')return takePenalty(s,s.shootout.aim,power);
     if(s.phase!=='playing')return false;
     const a=controlledPlayer(s);if(s.ball.owner!==a.id)return false;
-    const direction=aim||{x:-a.x,z:attackDirection(s,0)*CAGE.halfLength-a.z},d=norm(direction.x,direction.z);
-    return queueAction(s,a,'shot',{x:a.x+d.x*20,z:a.z+d.z*20},power);
+    const keeper=s.players[5],preferredX=aim?a.x+aim.x:a.x*0.15-keeper.x*0.3;
+    return queueAction(s,a,'shot',{x:preferredX,z:attackDirection(s,0)*CAGE.halfLength},power);
+}
+export function requestKnockdown(s){
+    if(s.phase!=='playing'||s.paused)return false;
+    const a=controlledPlayer(s);
+    const target=s.players.filter(b=>b.team!==a.team&&!isKnockedDown(b.knockdown,s.time)&&dist(a,b)<=KNOCKDOWN.range).sort((b,c)=>dist(a,b)-dist(a,c))[0];
+    if(!target)return false;
+    s.charging=false;s.charge=0;return queueAction(s,a,'knockdown',{x:target.x,z:target.z,id:target.id},0.65);
 }
 export function switchPlayer(s){
     if(s.phase!=='playing')return false;
-    const candidates=s.players.filter(a=>a.team===0&&a.role==='field').sort((a,b)=>dist(a,s.ball)-dist(b,s.ball));
-    s.controlledId=(candidates[0].id===s.controlledId?candidates[1]:candidates[0]).id;return true;
+    const candidates=s.players.filter(a=>a.team===0&&a.role==='field'&&!isKnockedDown(a.knockdown,s.time)).sort((a,b)=>dist(a,s.ball)-dist(b,s.ball));
+    if(!candidates.length)return false;s.controlledId=(candidates[0].id===s.controlledId?(candidates[1]||candidates[0]):candidates[0]).id;return true;
 }
 function takePossession(s,a){
     s.ball.owner=a.id;s.ball.lastTouch=a.id;s.ball.kicker=null;a.heldSince=s.time;
     if(a.team===0&&a.role==='field')s.controlledId=a.id;
 }
 function kick(s,a,action){
+    if(action.kind==='knockdown'){
+        const target=s.players[action.target.id];
+        if(!target||target.team===a.team||isKnockedDown(target.knockdown,s.time)||dist(a,target)>KNOCKDOWN.range)return;
+        target.knockdown=makeKnockdown(s.time,action.power);target.action=null;target.dive=null;target.vx=target.vz=0;target.cooldown=target.knockdown.getUpUntil;
+        if(s.ball.owner===target.id)Object.assign(s.ball,{owner:null,vx:a.fx*2.4,vz:a.fz*2.4,vy:0.75,lockUntil:s.time+0.2,kicker:a.id});
+        const victimTeam=target.team===0?'蓝':'橙';s.stats[a.team].knockdowns++;emit(s,`${victimTeam}队 ${target.number} 号被踢倒 · 眩晕 ${(target.knockdown.downUntil-s.time).toFixed(1)} 秒`);
+        if(refereeSees(s,a)){
+            s.stats[a.team].fouls++;s.referee.warningUntil=s.time+2;s.freeKick={team:target.team,x:target.x,z:target.z};
+            s.phase='foul';s.phaseTimer=1.4;stopActions(s);Object.assign(s.ball,{owner:null,vx:0,vy:0,vz:0});emit(s,`裁判吹罚踢人犯规 · ${victimTeam}队任意球`);
+        }return;
+    }
     if(action.kind==='tackle'){
         if(s.time<s.ball.lockUntil)return;
         const boot={x:a.x+a.fx*0.55,z:a.z+a.fz*0.55};
@@ -115,14 +160,14 @@ function kick(s,a,action){
         p.keeperGuess=clamp(p.shotAim+(rand(s)-0.5)*1.6,-1,1);if(rand(s)<0.28)p.keeperGuess=-Math.sign(p.shotAim||1)*0.8;
     }
 }
-function updateActions(s,dt){for(const a of s.players){if(a.dive&&s.time-a.dive.started>0.8)a.dive=null;if(!a.action)continue;const k=a.action;k.age+=dt;
+function updateActions(s,dt){for(const a of s.players){if(isKnockedDown(a.knockdown,s.time)){a.action=null;continue;}if(a.dive&&s.time-a.dive.started>0.8)a.dive=null;if(!a.action)continue;const k=a.action;k.age+=dt;
     if(!k.fired&&k.age>=0.14){k.fired=true;kick(s,a,k);}if(k.age>=0.64)a.action=null;}}
 function moveToward(a,target,speed,dt){const d=norm(target.x-a.x,target.z-a.z),length=dist(a,target);if(length>0.08){const step=Math.min(length,speed*dt);a.x+=d.x*step;a.z+=d.z*step;a.fx=d.x;a.fz=d.z;}}
 function botField(s,a,dt){
     const direction=attackDirection(s,a.team),b=s.ball,owner=b.owner==null?null:s.players[b.owner];
     if(owner?.id===a.id){
         const held=s.time-a.heldSince,goalDistance=Math.abs(direction*CAGE.halfLength-a.z);
-        const pressure=Math.min(...s.players.filter(p=>p.team!==a.team).map(p=>dist(a,p)));
+        const pressure=Math.min(...s.players.filter(p=>p.team!==a.team&&!isKnockedDown(p.knockdown,s.time)).map(p=>dist(a,p)));
         const target=choosePassTarget(s,a,{x:0,z:direction});
         if(!a.action&&held>0.42){
             if(goalDistance<5.7&&Math.abs(a.x)<4.5)queueAction(s,a,'shot',{x:(rand(s)-0.5)*3.3,z:direction*(CAGE.halfLength+0.5)},0.75);
@@ -131,7 +176,7 @@ function botField(s,a,dt){
         }
         if(!a.action)moveToward(a,{x:a.x*0.75,z:direction*(CAGE.halfLength-1)},4.8,dt);return;
     }
-    const nearest=s.players.filter(p=>p.team===a.team&&p.role==='field').sort((x,y)=>dist(x,b)-dist(y,b));
+    const nearest=s.players.filter(p=>p.team===a.team&&p.role==='field'&&!isKnockedDown(p.knockdown,s.time)).sort((x,y)=>dist(x,b)-dist(y,b));
     let target;
     if(!owner||owner.team!==a.team){
         if(nearest.slice(0,owner?1:2).some(p=>p.id===a.id))target={x:b.x+b.vx*0.14,z:b.z+b.vz*0.14};
@@ -147,7 +192,7 @@ function botField(s,a,dt){
 function botKeeper(s,a,dt){
     const d=attackDirection(s,a.team),home=-d*(CAGE.halfLength-0.95),b=s.ball;
     if(b.owner===a.id){
-        if(s.time-a.heldSince>0.6&&!a.action){const t=choosePassTarget(s,a,{x:0,z:d});queueAction(s,a,'pass',{x:t.x,z:t.z,id:t.id});}return;
+        if(s.time-a.heldSince>0.6&&!a.action){const t=choosePassTarget(s,a,{x:0,z:d});if(t)queueAction(s,a,'pass',{x:t.x,z:t.z,id:t.id});}return;
     }
     let targetX=clamp(b.x*0.65,-1.65,1.65);
     if(b.vz*d< -1&&Math.abs(b.z-home)<5){
@@ -161,6 +206,7 @@ function botKeeper(s,a,dt){
 function movePlayers(s,dt,input){
     const before=s.players.map(a=>({x:a.x,z:a.z}));
     for(const a of s.players){
+        if(isKnockedDown(a.knockdown,s.time)){a.vx=a.vz=0;continue;}
         if(a.role==='keeper')botKeeper(s,a,dt);
         else if(a.team===0&&a.id===s.controlledId&&!s.autoBlue){
             const move=norm(input.moveX||0,input.moveZ||0),magnitude=clamp(Math.hypot(input.moveX||0,input.moveZ||0),0,1),speed=input.sprint?7.6:5.4;
@@ -170,6 +216,7 @@ function movePlayers(s,dt,input){
     }
     for(let pass=0;pass<2;pass++)for(let i=0;i<10;i++)for(let j=i+1;j<10;j++){
         const a=s.players[i],b=s.players[j],length=dist(a,b),minimum=CAGE.playerRadius*2;
+        if(isKnockedDown(a.knockdown,s.time)||isKnockedDown(b.knockdown,s.time))continue;
         if(length<minimum){const d=length>1e-5?norm(b.x-a.x,b.z-a.z):{x:1,z:0},push=(minimum-length)*0.5;a.x-=d.x*push;a.z-=d.z*push;b.x+=d.x*push;b.z+=d.z*push;}
     }
     for(const a of s.players){confineCircle(a,CAGE.playerRadius);a.vx=(a.x-before[a.id].x)/dt;a.vz=(a.z-before[a.id].z)/dt;}
@@ -190,6 +237,7 @@ function integrateBall(s,dt,{penalty=false}={}){
         if(s.time>b.lockUntil){
             const candidates=penalty?[s.players[s.shootout.keeperId]]:[...s.players].sort((a,c)=>dist(a,b)-dist(c,b));
             for(const a of candidates){
+                if(isKnockedDown(a.knockdown,s.time))continue;
                 if(a.id===b.kicker&&s.time<b.lockUntil+0.4)continue;
                 if(a.role==='keeper'&&keeperContact(s,a,previous)){
                     s.stats[a.team].saves++;a.dive=a.dive||{started:s.time,side:Math.sign(b.x-a.x)||1};
@@ -211,7 +259,7 @@ function integrateBall(s,dt,{penalty=false}={}){
             const t=clamp((plane-previous.z)/(b.z-previous.z||1),0,1),cross={x:previous.x+(b.x-previous.x)*t,y:previous.y+(b.y-previous.y)*t};
             if(goalOpening(cross)){
                 if(penalty){resolvePenalty(s,true);return;}
-                const scoring=attackDirection(s,0)===sign?0:1;s.scores[scoring]++;s.phase='goal';s.phaseTimer=2;
+                const scoring=attackDirection(s,0)===sign?0:1;s.scores[scoring]++;s.goalSerial++;s.phase='goal';s.phaseTimer=2;
                 s.concededTeam=1-scoring;stopActions(s);b.owner=null;b.vx=b.vy=b.vz=0;emit(s,`${scoring===0?'蓝':'橙'}队进球！`);return;
             }
         }
@@ -236,16 +284,18 @@ export function continueMatch(s){if(s.phase==='halftime')s.phaseTimer=0;else if(
 export function stepMatch(s,dt,input={}){
     if(!(dt>0)||dt>0.1||s.paused||s.phase==='ready'||s.phase==='finished')return;
     s.time+=dt;
+    moveReferee(s,dt);
     if(s.phase==='shootout'){stepShootout(s,dt,input);return;}
-    if(['kickoff','goal','halftime'].includes(s.phase)){
+    if(['kickoff','goal','halftime','foul'].includes(s.phase)){
         s.phaseTimer-=dt;if(s.phaseTimer>0)return;
-        if(s.phase==='halftime'){s.half=2;s.remaining=HALF_SECONDS;placeKickoff(s,1);s.phase='kickoff';s.phaseTimer=1.4;emit(s,'下半场 · 橙队开球');}
+        if(s.phase==='foul')restartFreeKick(s);
+        else if(s.phase==='halftime'){s.half=2;s.remaining=HALF_SECONDS;placeKickoff(s,1);s.phase='kickoff';s.phaseTimer=1.4;emit(s,'下半场 · 橙队开球');}
         else if(s.phase==='goal'){placeKickoff(s,s.concededTeam);s.phase='kickoff';s.phaseTimer=1.2;}
         else{s.phase='playing';emit(s,`${s.half===1?'上':'下'}半场进行中`);}return;
     }
     s.remaining=Math.max(0,s.remaining-dt);
     if(s.charging){s.charge=clamp((s.time-s.chargeStart)/0.65,0.18,1);if(s.charge>=1)releaseShot(s,input.aim);}
-    movePlayers(s,dt,input);updateActions(s,dt);integrateBall(s,dt);
+    movePlayers(s,dt,input);updateActions(s,dt);if(s.phase==='playing')integrateBall(s,dt);
     if(s.remaining<=1e-7)endHalf(s);
 }
 
@@ -258,7 +308,7 @@ function preparePenalty(s){
     p.stage='aim';p.timer=0;p.aim=0;p.keeperAim=0;p.flightAge=0;
     p.shooterId=p.turn*5+([1,2,3,4,0][p.results[p.turn].length%5]);p.keeperId=(1-p.turn)*5;
     stopActions(s);
-    for(const a of s.players){a.x=(a.team===0?-1:1)*5.5;a.z=3+a.slot*1.4;a.fx=0;a.fz=-1;}
+    for(const a of s.players){a.x=(a.team===0?-1:1)*5.5;a.z=3+a.slot*1.4;a.fx=0;a.fz=-1;a.knockdown=null;}
     const shooter=s.players[p.shooterId],keeper=s.players[p.keeperId];
     shooter.x=0;shooter.z=-5.65;shooter.fx=0;shooter.fz=-1;shooter.cooldown=0;
     keeper.x=0;keeper.z=-11.25;keeper.fx=0;keeper.fz=1;
@@ -279,7 +329,7 @@ export function requestDive(s,side){
 }
 export function resolvePenalty(s,scored){
     const p=s.shootout;if(s.phase!=='shootout'||p.stage!=='flight')return false;
-    p.results[p.turn].push(Boolean(scored));p.stage='result';p.timer=0;s.ball.owner=null;s.ball.vx=s.ball.vy=s.ball.vz=0;
+    p.results[p.turn].push(Boolean(scored));if(scored)s.goalSerial++;p.stage='result';p.timer=0;s.ball.owner=null;s.ball.vx=s.ball.vy=s.ball.vz=0;
     emit(s,`${p.turn===0?'蓝':'橙'}队点球${scored?'命中':'未进'}`);
     if(p.results[0].length>=5&&p.results[0].length===p.results[1].length){const a=totalGoals(p.results[0]),b=totalGoals(p.results[1]);if(a!==b)finish(s,a>b?0:1);}
     return true;

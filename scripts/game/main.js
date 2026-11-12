@@ -14,6 +14,9 @@ import {
     updateFootRingBar,
 } from './assets.js';
 import {updateDefender, syncDefenderDifficulty} from './defender.js';
+import {findKnockdownTarget,kickDownOpponent} from './kicking.js';
+import {goalConfettiFor} from './confetti.js';
+import {updateStunStars} from './stun-stars.js';
 import { ensureAudioContext, playKeeperHitSound, playSixteenBitApplause } from './audio.js';
 import {
     breakDribble,
@@ -73,6 +76,7 @@ elements.root.appendChild(renderer.domElement);
 const clock = new THREE.Clock();
 const keys = new Set();
 const state = createGameState();
+const celebration=goalConfettiFor(elements.confettiCanvas);let kickIntent='ball';
 const materials = createMaterials();
 const world = new THREE.Group();
 scene.add(world);
@@ -102,6 +106,7 @@ const keeperKickContext = {
     state,
     player,
     keeper,
+    defender,
     referee,
     showMessage: notify,
     onKeeperTaunt: (message) => showKeeperBubble(message),
@@ -121,6 +126,7 @@ const startNewGame = (message = '新一局开球！') => {
 };
 const finishAttempt = (result) => {
     const gameResult = recordAttemptResult(state, result);
+    if(result==='goal')celebration.burst();
     updateScoreBoard(elements, state);
     if (gameResult) {
         endGame(gameResult);
@@ -135,30 +141,34 @@ const finishAttempt = (result) => {
     resetGame(messages[result]);
 };
 const kickRelease = () => {
+    const target=kickIntent==='person'?findKnockdownTarget({...keeperKickContext,elapsedTime:clock.elapsedTime}):null;
+    if(kickIntent==='person'&&!target){cancelKickCharge(state);notify('靠近门将或后卫，再按 F 踢人');return false;}
     state.kickDirection.copy(getAimDirection()).normalize();
-    state.kickTargetIsKeeper = player.position.distanceTo(keeper.position) < 1.05;
-    if (state.kickTargetIsKeeper) {
-        state.kickDirection.copy(keeper.position).sub(player.position).setY(0).normalize();
+    state.kickTargetIsKeeper = !!target;
+    if (target) {
+        state.kickDirection.copy(target.position).sub(player.position).setY(0).normalize();
     }
     return releaseKickCharge(state, clock.elapsedTime, (power) => {
-        if (kickDownKeeper({ ...keeperKickContext, elapsedTime: clock.elapsedTime }, power)) return true;
+        if(target)return kickDownOpponent({...keeperKickContext,target,elapsedTime:clock.elapsedTime},power);
         return kickBall({...kickContext, getAimDirection: () => state.kickDirection}, power);
     });
 };
-const kickStart = () => {
+const kickStart = (intent='ball') => {
     ensureAudioContext();
-    startKickCharge(state, clock.elapsedTime);
+    if(startKickCharge(state, clock.elapsedTime))kickIntent=intent;
 };
 
 bindKeyboard({
     keys,
     onKickStart: kickStart,
+    onKnockStart:()=>kickStart('person'),
     onKickRelease: kickRelease,
     onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
 });
 bindTouchControls({
     keys,
     onKickStart: kickStart,
+    onKnockStart:()=>kickStart('person'),
     onKickRelease: kickRelease,
     onKickCancel: () => cancelKickCharge(state),
     onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
@@ -199,12 +209,13 @@ window.getMatchRecords = getMatchRecords;
 
 window.addEventListener('resize', resize);
 resize();
-startNewGame('开球！按住 Space 蓄力，靠近门将可蓄力踢人');
+startNewGame('开球！Space 自动朝球门射门，F 踢人');
 animate();
 
 function animate() {
     const dt = Math.min(clock.getDelta(), 0.033);
     update(dt);
+    celebration.tick(dt);
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
@@ -246,6 +257,8 @@ function update(dt) {
     }
     
     updateReferee({ dt, state, referee, player, keeper, elapsedTime: clock.elapsedTime });
+    updateStunStars(keeper,clock.elapsedTime,keeper.userData.knockdown,camera);
+    updateStunStars(defender,clock.elapsedTime,defender.userData.knockdown,camera);
     updateAimArrow({ state, player, ball, aimArrow, getAimDirection });
     updateFootRingBar({ state, player, footRingBar, elapsedTime: clock.elapsedTime });
     updatePortraitModel(portrait, dt);
