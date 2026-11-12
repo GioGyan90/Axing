@@ -164,7 +164,7 @@ const CHARACTER_BODY_Y = 0.78;
 const CHARACTER_BODY_HEIGHT = 0.42;
 const CHARACTER_HEAD_Y = 1.3;
 
-export function createCharacter(materials, material, type) {
+export function createCharacter(materials, material, type, options = {}) {
     const bodyScale = ['player', 'defender'].includes(type) ? PLAYER_BODY_SCALE : 1;
     const bodyBaseY = CHARACTER_BODY_Y * bodyScale;
     const headBaseY = CHARACTER_HEAD_Y * bodyScale;
@@ -174,7 +174,7 @@ export function createCharacter(materials, material, type) {
     const visualRoot = new THREE.Group();
     visualRoot.position.y = FIELD_SURFACE_Y + CHARACTER_FOOT_CLEARANCE;
     const skin = new THREE.MeshStandardMaterial({ color: type === 'player' ? 0xffcf9f : 0xffc4ae, roughness: 0.62 });
-    const shortsColor = type === 'player' ? 0x235da8 : (type === 'referee' ? 0x05070a : type === 'defender' ? 0x193c54 : 0x7a2544);
+    const shortsColor = options.shortsColor ?? (type === 'player' ? 0x235da8 : (type === 'referee' ? 0x05070a : type === 'defender' ? 0x193c54 : 0x7a2544));
     const shorts = new THREE.MeshStandardMaterial({ color: shortsColor, roughness: 0.62 });
     const socks = new THREE.MeshStandardMaterial({ color: 0xf6f7ff, roughness: 0.5 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.58 });
@@ -219,15 +219,13 @@ export function createCharacter(materials, material, type) {
     for (const limb of Object.values(limbRefs)) limb.restHipPosition = limb.hip.position.clone();
     limbs.add(limbRefs.leftArm.hip, limbRefs.rightArm.hip, limbRefs.leftLeg.hip, limbRefs.rightLeg.hip);
 
-    if (type === 'player') {
+    if (type === 'player' && options.nameTag !== false) {
         const nameTag = createPlayerNameTag(DEFAULT_PLAYER_USERNAME);
-        const jerseyNumber = createJerseyBackNumber('9', bodyScale);
-        nameTag.position.set(0, 2.22, 0);
-        body.add(jerseyNumber);
-        visualRoot.add(nameTag);
+        nameTag.position.set(0, 2.22, 0);visualRoot.add(nameTag);
     }
-
-    if (type === 'defender') body.add(createJerseyBackNumber('4', bodyScale));
+    if (type === 'player' || type === 'defender' || options.number != null) {
+        body.add(createJerseyBackNumber(String(options.number ?? (type === 'defender' ? 4 : 9)), bodyScale));
+    }
     visualRoot.add(pelvis, body, head, limbs);
     group.add(visualRoot, shadow);
     group.userData.velocity = new THREE.Vector3();
@@ -236,6 +234,7 @@ export function createCharacter(materials, material, type) {
     group.userData.hitFlashUntil = 0;
     group.userData.type = type;
     group.userData.pose = { bodyScale, visualRoot, pelvis, body, head, limbs, hitMaterials, bodyBaseY, headBaseY, ...limbRefs, lastPosition: new THREE.Vector3(), speed: 0, phase: Math.random() * Math.PI * 2 };
+    if (options.headModel === false) return group;
     if (type === 'player') {
         loadZl9HeadModel(group, head);
     } else if (type === 'referee' || type === 'defender') {

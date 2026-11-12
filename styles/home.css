@@ -127,3 +127,6 @@ body, html {
     from { transform: translateX(100vw); }
     to { transform: translateX(-220%); }
 }
+
+.five-link {background:linear-gradient(135deg,#b6f2d5,#6bd4e9);border:1px solid #c8ffe2;}
+@media(max-width:768px){.hero{align-items:flex-end}.hero-content{transform:none;margin-bottom:max(18px,env(safe-area-inset-bottom));max-height:calc(100dvh - 130px);overflow:auto}.home-links{gap:8px}.home-link{padding:10px 14px;font-size:13px}}
