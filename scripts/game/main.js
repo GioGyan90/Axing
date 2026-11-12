@@ -17,6 +17,8 @@ import {updateDefender, syncDefenderDifficulty} from './defender.js';
 import {findKnockdownTarget,kickDownOpponent} from './kicking.js';
 import {goalConfettiFor} from './confetti.js';
 import {updateStunStars} from './stun-stars.js';
+import {updateSingleCombat} from './single-combat.js';
+import {updateAIWarning} from './ai-warning.js';
 import { ensureAudioContext, playKeeperHitSound, playSixteenBitApplause } from './audio.js';
 import {
     breakDribble,
@@ -221,18 +223,19 @@ function animate() {
 }
 
 function update(dt) {
+    const combat=updateSingleCombat({dt,state,player,keeper,defender,referee,ball,elapsedTime:clock.elapsedTime,showMessage:notify,onHit:playKeeperHitSound});
     updateChargePower(state, clock.elapsedTime);
     if (state.isChargingKick && state.chargePower >= 1) {
         kickRelease();
     }
     updatePlayer({ dt, state, keys, player, ball, getAimDirection, elapsedTime: clock.elapsedTime });
     updateBall({ dt, state, ball });
-    updateDefender({dt, state, defender, player, ball, elapsedTime: clock.elapsedTime,
+    if(!combat.defender)updateDefender({dt, state, defender, player, ball, elapsedTime: clock.elapsedTime,
         onSteal: () => notify('后卫抢断！快追回足球')});
     
     // Track if keeper made a save this frame for delayed notification
     let keeperMadeSave = false;
-    updateKeeper({
+    if(!combat.keeper)updateKeeper({
         dt,
         state,
         keeper,
@@ -259,11 +262,13 @@ function update(dt) {
     updateReferee({ dt, state, referee, player, keeper, elapsedTime: clock.elapsedTime });
     updateStunStars(keeper,clock.elapsedTime,keeper.userData.knockdown,camera);
     updateStunStars(defender,clock.elapsedTime,defender.userData.knockdown,camera);
+    updateStunStars(player,clock.elapsedTime,state.playerKnockdown,camera);
+    for(const actor of [keeper,defender])updateAIWarning(actor,!!actor.userData.combat?.intent||!!actor.userData.aiKick&&!actor.userData.aiKick.fired);
     updateAimArrow({ state, player, ball, aimArrow, getAimDirection });
     updateFootRingBar({ state, player, footRingBar, elapsedTime: clock.elapsedTime });
     updatePortraitModel(portrait, dt);
     updateKeeperBubble();
-    checkGoal({
+    if(!combat.foul)checkGoal({
         state,
         ball,
         onGoal: () => {

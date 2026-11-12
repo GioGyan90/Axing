@@ -18,12 +18,12 @@ function input(){
     return {moveX:Math.max(-1,Math.min(1,x)),moveZ:Math.max(-1,Math.min(1,z)),sprint:keys.has('ShiftLeft')||keys.has('ShiftRight'),
         aim:aimWorld?{x:aimWorld.x-a.x,z:aimWorld.z-a.z}:null};
 }
-function manual(){state.autoBlue=false;updateDemoButton();}
+function manual(){state.autoBlue=false;const a=state.players[state.controlledId];a.combat.intent=null;if(a.action?.source==='ai'&&!a.action.fired){a.action=null;a.cooldown=state.time;}updateDemoButton();}
 function updateDemoButton(){$('demo').setAttribute('aria-pressed',state.autoBlue);text('demo',state.autoBlue?'接管蓝队':'AI 观战');}
 function shootDown(){manual();beginCharge(state);}
 function shootUp(){releaseShot(state,input().aim);}
 function pass(){manual();requestPass(state,input().aim);}
-function knock(){if(state.phase!=='playing'||state.paused)return;manual();if(!requestKnockdown(state))state.lastEvent='靠近未眩晕的对方球员，再按 F 踢人';}
+function knock(){if(state.phase!=='playing'||state.paused)return;if(isKnockedDown(state.players[state.controlledId].knockdown,state.time)){state.lastEvent='眩晕中 · Q 可切换队友';return;}manual();if(!requestKnockdown(state))state.lastEvent='靠近未眩晕的对方球员，再按 F 踢人';}
 function togglePause(){if(!['ready','finished'].includes(state.phase)){state.paused=!state.paused;keys.clear();stick={x:0,z:0};state.charging=false;}}
 $('start').onclick=()=>{resetReview();if(state.phase==='ready')startMatch(state);else if(state.phase==='halftime')continueMatch(state);else if(state.phase==='finished'){state=createMatch();lastGoalSerial=0;confetti.clear();startMatch(state);}else state.paused=false;updateDemoButton();};
 $('restart').onclick=()=>{resetReview();state=createMatch({autoBlue:state.autoBlue});aimWorld=null;lastGoalSerial=0;confetti.clear();keys.clear();startMatch(state);updateDemoButton();};
@@ -65,11 +65,11 @@ function updateUI(){
     const seconds=Math.max(0,Math.ceil(state.remaining));text('clock',`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`);
     text('period',state.phase==='shootout'?'点球大战':state.phase==='finished'?'比赛结束':state.half===1?'上半场':'下半场');
     text('passes-blue',state.stats[0].passes);text('passes-orange',state.stats[1].passes);
-    const stunned=state.players.filter(a=>a.team===1&&isKnockedDown(a.knockdown,state.time));
-    text('referee-status',state.phase==='foul'?'裁判吹罚 · 橙队任意球':`场外裁判 · ${stunned.length?`对方 ${stunned.length} 人眩晕中`:'视野内踢人犯规'}`);
-    $('knock').disabled=state.phase!=='playing'||state.paused;
     const a=state.players[state.controlledId],owner=state.ball.owner==null?null:state.players[state.ball.owner];
-    text('controlled',`蓝队 ${a.number} 号${a.role==='keeper'?' · 门将':''}`);text('possession',owner?`${owner.team===0?'蓝':'橙'}队 ${owner.number} 号控球`:'争夺自由球');
+    const stunned=state.players.filter(a=>isKnockedDown(a.knockdown,state.time)),down=isKnockedDown(a.knockdown,state.time);
+    text('referee-status',state.phase==='foul'?`裁判吹罚 · ${state.freeKick?.team===0?'蓝':'橙'}队任意球`:`场外裁判 · ${stunned.length?`蓝队 ${stunned.filter(a=>a.team===0).length} / 橙队 ${stunned.filter(a=>a.team===1).length} 人眩晕`:'视野内踢人犯规'}`);
+    $('knock').disabled=state.phase!=='playing'||state.paused||down;$('shoot').disabled=down;$('pass').disabled=down;
+    text('controlled',`蓝队 ${a.number} 号${down?(state.time<a.knockdown.downUntil?` · 眩晕 ${(a.knockdown.downUntil-state.time).toFixed(1)}s`:' · 起身中'):a.role==='keeper'?' · 门将':''}`);text('possession',owner?`${owner.team===0?'蓝':'橙'}队 ${owner.number} 号控球`:'争夺自由球');
     text('direction',state.shootout?(state.shootout.turn===0?'点球进攻方向 ↑':'守门：左右移动 + 射门键扑救'):`蓝队进攻方向 ${attackDirection(state,0)<0?'↑':'↓'}`);text('event',state.lastEvent);
     $('power-fill').style.width=state.charge*100+'%';document.querySelector('.power').setAttribute('aria-valuenow',Math.round(state.charge*100));
     text('pause',state.paused?'继续':'暂停');
@@ -83,7 +83,7 @@ function updateUI(){
     const overlay=state.phase==='ready'||state.phase==='halftime'||state.phase==='finished'||state.paused;
     $('screen').hidden=!overlay;$('format').hidden=state.phase!=='ready';
     if(overlay){
-        if(state.phase==='ready'){text('screen-title','来一场笼式足球');text('screen-body','蓝队由你控制，队友跑位接应。射门自动朝对方门框，F 可踢倒附近对手，场外裁判看见会吹罚。');text('screen-detail','球碰笼壁会反弹，不设出界。平局双方各罚 5 轮点球，仍平则逐轮加罚。');text('start','开始比赛');}
+        if(state.phase==='ready'){text('screen-title','来一场笼式足球');text('screen-body','蓝队由你控制，队友接应。双方 AI 也会近身踢人，红色 ! 提醒闪避。Space 射门，F 踢人，裁判看见会吹罚。');text('screen-detail','球碰笼壁会反弹，不设出界。平局双方各罚 5 轮点球，仍平则逐轮加罚。');text('start','开始比赛');}
         else if(state.phase==='finished'){text('screen-title',state.winner===0?'蓝队获胜！':'橙队获胜');text('screen-body',`常规时间 ${state.scores[0]} : ${state.scores[1]}${state.shootout?` · 点球 ${totalGoals(state.shootout.results[0])} : ${totalGoals(state.shootout.results[1])}`:''}`);text('screen-detail',`蓝队完成 ${state.stats[0].passes} 次传球、${state.stats[0].shots} 次射门。再来一场配合进攻吧。`);text('start','再赛一场');}
         else if(state.paused){text('screen-title','比赛已暂停');text('screen-body','比分、计时和球员位置已保留。');text('screen-detail','E 传球 · Q 切换 · Space 射门 / 抢断。点球守门时左右移动并选择时机扑救。');text('start','继续比赛');}
         else{text('screen-title','中场休息 · 交换场地');text('screen-body',`蓝队 ${state.scores[0]} : ${state.scores[1]} 橙队`);text('screen-detail',`下半场 90 秒，橙队开球。${Math.max(0,Math.ceil(state.phaseTimer))} 秒后继续。`);text('start','下半场开球');}
@@ -96,7 +96,7 @@ function frame(now){
     if(!state.paused&&!reviewFrozen){accumulator+=delta;let steps=0;while(accumulator>=1/60&&steps++<31){
         stepMatch(state,1/60,input());accumulator-=1/60;
         if(review&&$('review-hold').checked){
-            if(!reviewTriggered&&(state.stats[0].knockdowns||state.goalSerial)){reviewTriggered=true;reviewFreezeAt=state.time+0.35;}
+            if(!reviewTriggered&&(state.stats[0].knockdowns||state.stats[1].knockdowns||state.goalSerial)){reviewTriggered=true;reviewFreezeAt=state.time+0.35;}
             if(state.time>=reviewFreezeAt){reviewFrozen=true;accumulator=0;break;}
         }
     }}
@@ -108,15 +108,19 @@ function frame(now){
 }
 if(review){
     function scenario(kind){
-        state=createMatch();state.phase='playing';state.time=10;reviewFrozen=false;reviewTriggered=false;reviewFreezeAt=Infinity;lastGoalSerial=0;confetti.clear();keys.clear();
+        state=createMatch({seed:kind==='ai-foul'?105:kind==='ai'?1:12345});state.phase='playing';state.time=10;reviewFrozen=false;reviewTriggered=false;reviewFreezeAt=Infinity;lastGoalSerial=0;confetti.clear();keys.clear();
         for(const a of state.players){a.x=a.team?5:-5;a.z=6+a.slot;a.cooldown=999;}
-        const x=kind==='foul'?-7.1:kind==='goal'?4:0,a=state.players[4],victim=state.players[9];
+        const x=kind==='foul'||kind==='ai-foul'?-7.1:kind==='goal'?4:0,a=state.players[4],victim=state.players[9];
         Object.assign(a,{x,z:kind==='goal'?-7:1,fx:0,fz:-1,cooldown:0});Object.assign(victim,{x,z:0.1,fx:0,fz:1});
         if(kind==='goal')Object.assign(state.players[5],{x:-5,z:8});
+        if(kind==='ai'||kind==='ai-foul'){victim.cooldown=0;state.referee.z=0.4;}
         Object.assign(state.ball,{owner:4,x,y:0.23,z:a.z-0.56,lastTouch:4});
         aimWorld=kind==='goal'?{x:100,z:8}:null;state.lastEvent=kind==='goal'?'鼠标在身后 · 按射门检查自动瞄准':kind==='foul'?'靠近场外裁判 · 按 F 检查吹罚':'按 F 踢人 · 检查倒地与眩晕';updateDemoButton();
+        if(kind==='ai'||kind==='ai-foul')state.lastEvent='AI 自主决策中 · 无需按踢人键';
     }
     $('review-knock').onclick=()=>scenario('knock');$('review-foul').onclick=()=>scenario('foul');$('review-goal').onclick=()=>scenario('goal');
+    $('review-ai-warning').onclick=()=>{scenario('ai');for(let i=0;i<240&&!state.players[9].combat.intent;i++)stepMatch(state,1/120,{});reviewFrozen=true;reviewTriggered=true;};
+    $('review-ai').onclick=()=>scenario('ai');$('review-ai-foul').onclick=()=>scenario('ai-foul');
     $('review-hold').onchange=()=>{reviewFrozen=false;reviewFreezeAt=Infinity;reviewTriggered=true;};
     $('review-half').onclick=()=>{resetReview();state.paused=false;if(['ready','kickoff','goal'].includes(state.phase))state.phase='playing';state.remaining=0.02;};
     $('review-tie').onclick=()=>{resetReview();state.paused=false;state.phase='playing';state.half=2;state.remaining=0.02;state.scores=[0,0];state.charging=false;};

@@ -58,3 +58,5 @@ AXING_THREE_ROOT=/path/to/three-r160/package npm test
 ![手机视口检查：竖屏点球与横屏比赛（本地检查按钮仅测试环境可见）](qa/five-mobile.jpg)
 
 2026-11-12 后续已加入自动朝对方门框射门、F 踢人 / 眩晕、场外裁判吹罚任意球及每次进球撒花。最新规则与 61 项验证见 [自动射门与踢倒说明](GOAL_ASSIST_AND_FOULS.md)。
+
+AI 自主踢人、预警、双方受击及对称判罚见 [AI 对抗说明](AI_COMBAT.md)。当前累计 74 项测试通过。

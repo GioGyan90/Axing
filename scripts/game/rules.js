@@ -8,6 +8,7 @@ import { updateDribbling } from './dribbling.js';
 import { checkHighBallPunch, performHighBallPunch, updatePunchAnimation, predictKeeperSave, beginKeeperSave, updateKeeperSave, KEEPER_STATE } from './goalkeeper.js';
 import { MOTION_TIMING } from './football-motion.js';
 import {resetDefender} from './defender.js';
+import {isKnockedDown,getUpProgress} from './knockdown.js';
 
 // 重新导出 kicking.js 中的函数，供 main.js 使用
 export { kickBall, kickDownKeeper };
@@ -129,10 +130,12 @@ export function createGameState() {
         isDribbling: false,
         dribbleBreakUntil: 0,
         dribbleNeedsRetouch: false,
+        playerKnockdown:null,aiFoulUntil:0,aiFoulPending:false,combatProtectedUntil:0,combatNextTeamAttackAt:0,aiSeed:12345,aiKnockdowns:0,aiFouls:0,
     };
 }
 
 export function resetGameProgress(state) {
+    state.aiKnockdowns=0;state.aiFouls=0;
     state.playerScore = 0;
     state.keeperScore = 0;
     state.outScore = 0;
@@ -235,7 +238,7 @@ export function updateChargePower(state, elapsedTime) {
 }
 
 export function startKickCharge(state, elapsedTime) {
-    if (state.gameOver || state.isChargingKick || state.kickAction || state.isResetting) return false;
+    if (state.gameOver || state.isChargingKick || state.kickAction || state.isResetting || isKnockedDown(state.playerKnockdown,elapsedTime) || elapsedTime<state.aiFoulUntil) return false;
     state.isChargingKick = true;
     state.chargeStartTime = elapsedTime;
     updateChargePower(state, elapsedTime);
@@ -293,6 +296,7 @@ export function updateReferee({ dt, state, referee, player, keeper, elapsedTime 
     const watchTarget = state.pendingRefereeFailure ? player.position : keeper.position.clone().lerp(player.position, 0.45);
     referee.rotation.y = Math.atan2(watchTarget.x - referee.position.x, watchTarget.z - referee.position.z);
     updatePlayerAnimation(referee, { dt, elapsedTime, movement: referee.userData.velocity });
+    if(elapsedTime<state.aiFoulUntil)referee.userData.pose.rightArm.hip.rotation.x=-1.7;
 }
 
 export function consumeRefereeFailureIfReady(state, elapsedTime) {
@@ -303,6 +307,7 @@ export function consumeRefereeFailureIfReady(state, elapsedTime) {
 }
 
 export function breakDribble(state, player, ball, elapsedTime) {
+    if(isKnockedDown(state.playerKnockdown,elapsedTime)||elapsedTime<state.aiFoulUntil)return false;
     const canBreakDribble = state.isDribbling || flatDistance(player.position, ball.position) < 0.9;
     if (!canBreakDribble) return false;
     const releaseDirection = player.userData.facing.clone();
@@ -320,6 +325,11 @@ export function breakDribble(state, player, ball, elapsedTime) {
 }
 
 export function updatePlayer({ dt, state, keys, player, ball, getAimDirection, elapsedTime }) {
+    if(!state.gameOver&&(isKnockedDown(state.playerKnockdown,elapsedTime)||elapsedTime<state.aiFoulUntil)){
+        state.isDribbling=false;player.userData.velocity.set(0,0,0);
+        updatePlayerAnimation(player,{dt,elapsedTime,movement:player.userData.velocity,knocked:isKnockedDown(state.playerKnockdown,elapsedTime),getUpProgress:getUpProgress(state.playerKnockdown,elapsedTime)});
+        return;
+    }
     if (state.gameOver) {
         state.isDribbling = false;
         player.userData.velocity.set(0, 0, 0);
@@ -656,6 +666,8 @@ export function checkGoal({ state, ball, onGoal, onOutOfBounds }) {
 export function resetRound({ state, player, keeper, referee, defender, ball, showMessage, elapsedTime = 0 }, message) {
     if (state.gameOver) return;
     state.isResetting = true;
+    state.playerKnockdown=null;state.aiFoulUntil=0;state.aiFoulPending=false;state.combatProtectedUntil=elapsedTime+2.5;state.combatNextTeamAttackAt=0;
+    keeper.userData.combat=null;keeper.userData.aiKick=null;player.userData.hitFlashUntil=0;
     player.position.set(0, 0, 3.85);
     keeper.position.set(0, 0, FIELD.goalZ + 0.72);
     keeper.rotation.y = 0;

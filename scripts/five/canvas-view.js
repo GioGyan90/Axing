@@ -1,6 +1,7 @@
 import {CAGE,VERTICES,choosePassTarget} from './engine.js';
 import {isKnockedDown,getUpProgress} from '../game/knockdown.js';
 import {REFEREE_VISION} from '../game/config.js';
+import {hasCombatWarning} from '../game/combat-ai.js';
 
 // Fast, playable projected view when WebGL is unavailable. It renders the same
 // simulation, including the octagonal walls, all ten players and ball height.
@@ -79,6 +80,10 @@ export function createCanvasView(canvas){
             const head={x:q.x+Math.sin(tilt)*size*0.78,y:q.y-size*(0.57+Math.cos(tilt)*0.78)-size*0.30};
             ctx.fillStyle='#ffdc6b';ctx.textAlign='center';ctx.font=`bold ${Math.max(10,size*0.32)}px system-ui`;
             for(let i=0;i<3;i++){const angle=s.time*4+i*Math.PI*2/3;ctx.fillText('★',head.x+Math.cos(angle)*size*0.4,head.y+Math.sin(angle)*size*0.12);}
+        }
+        else if(hasCombatWarning(a)){
+            const y=q.y-size*1.92;ctx.fillStyle='#d95642';ctx.beginPath();ctx.arc(q.x,y,Math.max(5,size*0.19),0,Math.PI*2);ctx.fill();
+            ctx.fillStyle='#fff8df';ctx.font=`bold ${Math.max(10,size*0.31)}px system-ui`;ctx.textAlign='center';ctx.fillText('!',q.x,y+Math.max(3,size*0.11));
         }
     }
     return {kind:'canvas',canvas,

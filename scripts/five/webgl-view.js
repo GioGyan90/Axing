@@ -5,6 +5,8 @@ import {updateGoalkeeperAnimation} from '../game/goalkeeper-animation.js';
 import {CAGE,VERTICES,choosePassTarget} from './engine.js';
 import {isKnockedDown,getUpProgress} from '../game/knockdown.js';
 import {updateStunStars} from '../game/stun-stars.js';
+import {updateAIWarning} from '../game/ai-warning.js';
+import {hasCombatWarning} from '../game/combat-ai.js';
 
 export function createWebGLView(canvas,context){
     const renderer=new THREE.WebGLRenderer({canvas,context,antialias:true});
@@ -40,6 +42,7 @@ export function createWebGLView(canvas,context){
                 else if(a.role==='keeper')updateGoalkeeperAnimation(m,{dt,elapsedTime:s.time,diving:!!a.dive,motionTime:a.dive?Math.min(1.6,(s.time-a.dive.started)*2):0,diveDirection:a.dive?(a.dive.side*(a.fz<0?-1:1)):1,saveHeight:s.ball.y});
                 else updatePlayerAnimation(m,{dt,elapsedTime:s.time,movement:m.userData.velocity});
                 updateStunStars(m,s.time,a.knockdown,camera);
+                updateAIWarning(m,hasCombatWarning(a));
             }
             const r=s.referee;referee.position.set(r.x,0,r.z);referee.rotation.y=Math.atan2(r.fx,r.fz);referee.userData.velocity.set(r.vx,0,r.vz);
             updatePlayerAnimation(referee,{dt,elapsedTime:s.time,movement:referee.userData.velocity});
