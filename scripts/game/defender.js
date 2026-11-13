@@ -12,7 +12,7 @@ export function resetDefender({state, defender, elapsedTime = 0}) {
     defender.userData.velocity.set(0, 0, 0);
     defender.userData.facing.set(0, 0, 1);
     defender.userData.knockdown = null;
-    defender.userData.combat=null;defender.userData.aiKick=null;
+    defender.userData.combat=null;defender.userData.aiKick=null;defender.userData.slide=null;
     defender.userData.defense = {enabled, readyAt: elapsedTime + PROFILE.gracePeriod,
         nextTackleAt: 0, tackle: null, steals: 0};
     defender.userData.pose.lastPosition.copy(defender.position);

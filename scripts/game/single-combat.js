@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import {FIELD,BALL_GROUND_Y} from './config.js';
 import {KNOCKDOWN,makeKnockdown,isKnockedDown} from './knockdown.js';
-import {createCombatAI,considerCombat,consumeCombatAttempt,clearCombatIntent} from './combat-ai.js';
+import {createCombatAI,considerCombat,considerSlide,consumeCombatAttempt,clearCombatIntent} from './combat-ai.js';
 import {isInRefereeVision} from './referee-vision.js';
 import {updatePlayerAnimation} from './player-animation.js';
+import {startSingleAISlide,updateSingleSlide} from './single-slide.js';
 const flat=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-function cancel(character){if(!character)return;clearCombatIntent(character.userData.combat);character.userData.aiKick=null;}
+function cancel(character){if(!character)return;clearCombatIntent(character.userData.combat);character.userData.aiKick=null;character.userData.slide=null;}
 export function updateSingleCombat({dt,state,player,keeper,defender,referee,ball,elapsedTime:time,showMessage=()=>{},onHit=()=>{}}){
     const busy={keeper:false,defender:false,foul:false};
     if(state.gameOver||state.isResetting||state.pendingRefereeFailure||state.pendingSaveNotification){cancel(keeper);cancel(defender);return busy;}
@@ -21,6 +22,7 @@ export function updateSingleCombat({dt,state,player,keeper,defender,referee,ball
     for(const [name,character,id] of [['keeper',keeper,5],['defender',defender,6]]){
         if(!character||character.visible===false||name==='defender'&&state.keeperLevel!==3){cancel(character);continue;}
         if(isKnockedDown(character.userData.knockdown,time)||name==='keeper'&&time<state.keeperGetUpUntil){cancel(character);continue;}
+        if(character.userData.slide){busy[name]=true;updateSingleSlide({dt,actor:character,elapsedTime:time});continue;}
         const ai=character.userData.combat??=createCombatAI(state.aiSeed,id);
         const otherAction=name==='keeper'?state.keeperSave:character.userData.defense?.tackle;
         const actor={id,team:1,role:name==='keeper'?'keeper':'field',x:character.position.x,z:character.position.z,action:otherAction,
@@ -47,13 +49,27 @@ export function updateSingleCombat({dt,state,player,keeper,defender,referee,ball
                 if(name==='keeper')state.keeperSave=null;else if(character.userData.defense)character.userData.defense.tackle=null;
             }
         }
+        if(!action&&!ai.intent&&name==='defender'){
+            const had=!!ai.slideIntent;
+            const intent=considerSlide(ai,{time,actor,owner,ball:{...ball.position,vx:state.ballVelocity.x,vz:state.ballVelocity.z},seen:!!referee&&isInRefereeVision(character.position,referee),protectedUntil:state.combatProtectedUntil,teamReadyAt:state.combatNextTeamAttackAt});
+            if(intent){
+                if(!had)showMessage('后卫准备滑铲 · 快闪开！');
+                if(time>intent.expiresAt||owner?.team===1||flat(character.position,ball.position)>3.6){ai.slideIntent=null;}
+                else{busy[name]=true;character.userData.velocity.set(0,0,0);
+                    const direction={x:intent.x-character.position.x,z:intent.z-character.position.z};character.rotation.y=Math.atan2(direction.x,direction.z);
+                    updatePlayerAnimation(character,{dt,elapsedTime:time,movement:character.userData.velocity});
+                    if(time>=intent.readyAt){startSingleAISlide({state,actor:character,elapsedTime:time,direction});consumeCombatAttempt(ai,time);}
+                    continue;
+                }
+            }
+        }
         if(!action)continue;
         busy[name]=true;const age=time-action.started;character.userData.velocity.set(0,0,0);
         updatePlayerAnimation(character,{dt,elapsedTime:time,kicking:true,kickTime:0.3+age/0.64,movement:character.userData.velocity});
         if(!action.fired&&age>=0.14){
             action.fired=true;
             if(flat(character.position,player.position)<=KNOCKDOWN.range&&!isKnockedDown(state.playerKnockdown,time)&&time>=state.combatProtectedUntil){
-                state.playerKnockdown=makeKnockdown(time,0.45);state.combatProtectedUntil=state.playerKnockdown.getUpUntil+1.2;
+                player.userData.slide=null;state.playerSlideActive=false;state.playerKnockdown=makeKnockdown(time,0.45);state.combatProtectedUntil=state.playerKnockdown.getUpUntil+1.2;
                 state.isChargingKick=false;state.chargePower=0;state.kickAction=null;state.kickPoseTimer=0;state.isDribbling=false;state.isSprinting=false;state.dribbleBreakUntil=state.playerKnockdown.getUpUntil;
                 player.userData.hitFlashUntil=time+0.25;state.aiKnockdowns++;onHit(0.45);
                 if(flat(player.position,ball.position)<1.2)state.ballVelocity.copy(player.position).sub(character.position).setY(0).normalize().multiplyScalar(2.4).setY(0.75);

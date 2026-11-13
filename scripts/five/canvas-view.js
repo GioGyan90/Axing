@@ -48,7 +48,26 @@ export function createCanvasView(canvas){
         path([{x:x+w,y},{x:x+w+d,y:y-d*0.6},{x:x+w+d,y:y+h-d*0.6},{x:x+w,y:y+h}],side);
         path([{x,y},{x:x+d,y:y-d*0.6},{x:x+w+d,y:y-d*0.6},{x:x+w,y}],top);
     }
+    function slidingActor(a){
+        const age=a.slide.age,w=Math.max(0,Math.min(1,age/0.13,(0.84-age)/0.24)),size=scale*0.9;
+        const point=(f,side,y,standSide,standY)=>p(a.x+a.fx*f*w+a.fz*(side*w+standSide*(1-w)),y*w+standY*(1-w),a.z+a.fz*f*w-a.fx*(side*w+standSide*(1-w)));
+        const blue=a.team===0,shirt=blue?'#39b4f0':'#ff9a43',shorts=blue?'#16476b':'#693a30',skin=blue?'#efc194':'#cc996d';
+        for(const side of [-0.25,0.25])line(point(-0.9,side,0.07,side,0.07),point(-0.45,side,0.07,side,0.07),'#d5f1cc55',1.4);
+        const hip=point(0,0,0.33,0,0.55),shoulder=point(-0.34,0,0.72,0,1.0),head=point(-0.55,0,1.02,0,1.38);
+        const joints=[
+            [point(0.05,-0.14,0.32,-0.12,0.54),point(0.48,-0.15,0.2,-0.12,0.28),point(0.96,-0.15,0.14,-0.12,0.07)],
+            [point(-0.02,0.14,0.32,0.12,0.54),point(0.24,0.36,0.38,0.12,0.28),point(-0.25,0.30,0.13,0.12,0.07)],
+        ];
+        for(const [thigh,knee,foot] of joints){line(thigh,knee,shorts,size*0.19);line(knee,foot,'#edf4e9',size*0.14);line(foot,{x:foot.x+a.fx*size*0.16,y:foot.y+a.fz*size*0.09},'#192f40',size*0.14);}
+        const dx=shoulder.x-hip.x,dy=shoulder.y-hip.y,len=Math.hypot(dx,dy)||1,nx=-dy/len*size*0.24,ny=dx/len*size*0.24;
+        path([{x:hip.x+nx,y:hip.y+ny},{x:shoulder.x+nx,y:shoulder.y+ny},{x:shoulder.x-nx,y:shoulder.y-ny},{x:hip.x-nx,y:hip.y-ny}],shirt,blue?'#197bb4':'#cd602c',1);
+        for(const sign of [-1,1])line(point(-0.34,sign*0.27,0.7,sign*0.28,0.98),point(-0.55,sign*0.43,0.2,sign*0.33,0.57),skin,size*0.14);
+        ctx.fillStyle='#f5f6e9';ctx.font=`bold ${Math.max(9,size*0.25)}px system-ui`;ctx.textAlign='center';ctx.fillText(a.number,(hip.x+shoulder.x)/2,(hip.y+shoulder.y)/2+3);
+        box(head.x-size*0.22,head.y-size*0.23,size*0.44,size*0.44,size*0.1,skin,'#b98460','#f3cda3');
+        box(head.x-size*0.23,head.y-size*0.26,size*0.46,size*0.13,size*0.1,blue?'#423b32':'#3b3028','#2c2b28','#5d5142');
+    }
     function actor(a,s){
+        if(a.slide){slidingActor(a);return;}
         const q=p(a.x,0,a.z),size=scale*0.9,team=a.team===0;
         ctx.save();ctx.translate(q.x,q.y);
         ctx.fillStyle='#071f293b';ctx.beginPath();ctx.ellipse(0,1,size*0.48,size*0.15,0,0,Math.PI*2);ctx.fill();

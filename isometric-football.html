@@ -34,8 +34,8 @@
                 </ol>
             </div>
             <p class="hint">
-                <span class="desktop">WASD / 方向键移动；Space 自动朝对方门框射门，鼠标微调门内落点；按住 F 可蓄力踢倒门将或后卫，眩晕 3–5 秒。</span>
-                门将和困难后卫也会近身踢人，红色 ! 提醒闪避。困难模式增加一名主动抢球的后卫。共 5 次机会，踢进 3 球获胜；射门失败累计 3 次马上失败。主裁判的深绿色视野内踢人会被警告并记一次失败。
+                <span class="desktop">WASD / 方向键移动；Space 自动朝对方门框射门，鼠标微调门内落点；按住 F 可蓄力踢倒门将或后卫，眩晕 3–5 秒；R 沿移动方向滑铲，可铲球也可铲人。</span>
+                门将和困难后卫也会近身踢人，后卫也会滑铲，红色 ! 提醒闪避。困难模式增加一名主动抢球的后卫。共 5 次机会，踢进 3 球获胜；射门失败累计 3 次马上失败。主裁判的深绿色视野内踢人会被警告并记一次失败。
             </p>
         </div>
         <div class="actions">
@@ -47,6 +47,7 @@
                 </select>
             </label>
             <button class="btn primary" id="restart-btn">重新开球</button>
+            <button class="btn desktop-knock" data-key="KeyR">滑铲 R</button>
             <button class="btn desktop-knock" data-key="KeyF">踢人 F（按住）</button>
             <button class="btn" id="records-btn">查看战绩</button>
             <a class="btn" href="./five-a-side.html">5v5 八角笼</a>
@@ -87,7 +88,7 @@
             <button class="pad-btn right" data-key="KeyD">▶</button>
             <button class="pad-btn down" data-key="KeyS">▼</button>
         </div>
-        <div class="kick-actions"><button class="kick" data-key="KeyF">踢人 F</button><button class="kick" data-key="Space">射门</button></div>
+        <div class="kick-actions"><button class="kick" data-key="KeyR">滑铲 R</button><button class="kick" data-key="KeyF">踢人 F</button><button class="kick" data-key="Space">射门</button></div>
     </section>
 
     <script type="importmap">

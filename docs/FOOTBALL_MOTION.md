@@ -18,7 +18,7 @@
 - `tools/football-plans.mjs`：可编辑的动作方案和关键时刻。
 - `tools/build-football-motions.mjs`：调用指定工具编译。
 - `scripts/game/motions/football.motion-plans.json`：可返回动作实验室的完整方案。
-- `scripts/game/motions/football-clips.js`：预烘焙的五段动画，约 149 KB，无新的游戏运行时网络依赖。
+- `scripts/game/motions/football-clips.js`：预烘焙的六段动画，约 172 KB，无新的游戏运行时网络依赖。
 - `scripts/game/football-rig.js`：匹配游戏尺寸的动作骨架。
 - `scripts/game/football-motion.js`：AnimationMixer、刚性零件同步、支撑脚固定、短程触球 IK 和实际网格接地。
 
@@ -58,3 +58,5 @@ npm test
 当前测试浏览器禁止创建 WebGL 上下文。视觉检查使用指定工具的 Canvas CPU 兼容渲染器，读取同一 Three.js 模型、骨架与相机；它只用于独立检查页。小游戏保留原 WebGL 渲染。**没有宣称完成 WebGL/GPU 画面、阴影、移动端真机或游戏整体帧率验收。** 球与手 / 脚的接触采用刚性近似，不是全身物理模拟；手套 / 手掌沿用方块形体，不含独立手指。
 
 复用的兼容渲染器、LICENSE 和 NOTICE 位于 `scripts/vendor/prompt2rig/`；本次仅复制其兼容预览代码，未引入上游 HQ 模型、角色素材或远程服务。
+
+2026-11-13 新增 `slide` 方案，同样通过固定版本 3D_AItool 的 `planToTake → retargetTake` 烘焙。方案 1 秒，游戏按 0.84 秒播放；水平位移由游戏物理控制，动画不重复添加 root 位移。专项检查与当前限制见 [滑铲说明](SLIDE_TACKLE.md)。

@@ -81,14 +81,16 @@ export function hideResultOverlay(elements) {
 function playConfetti(canvas) { goalConfettiFor(canvas).burst(); }
 function stopConfetti(canvas) { goalConfettiFor(canvas).clear(); }
 
-export function bindKeyboard({ keys, onKickStart, onKnockStart, onKickRelease, onBackDoubleTap }) {
+export function bindKeyboard({ keys, onKickStart, onKnockStart, onSlide, onKickRelease, onBackDoubleTap }) {
     let lastBackTapAt = 0;
     window.addEventListener('keydown', (event) => {
+        if(['INPUT','SELECT','TEXTAREA'].includes(event.target?.tagName))return;
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
         if (event.code === 'Space') {
             if (!event.repeat) onKickStart();
             return;
         }
+        if(event.code==='KeyR'){if(!event.repeat)onSlide?.();return;}
         if(event.code==='KeyF'){if(!event.repeat)onKnockStart?.();return;}
         if ((event.code === 'ArrowDown' || event.code === 'KeyS') && !event.repeat) {
             const now = performance.now();
@@ -110,7 +112,7 @@ export function bindKeyboard({ keys, onKickStart, onKnockStart, onKickRelease, o
     });
 }
 
-export function bindTouchControls({ keys, onKickStart, onKnockStart, onKickRelease, onKickCancel, onBackDoubleTap }) {
+export function bindTouchControls({ keys, onKickStart, onKnockStart, onSlide, onKickRelease, onKickCancel, onBackDoubleTap }) {
     let lastBackTapAt = 0;
     document.querySelectorAll('[data-key]').forEach((button) => {
         const key = button.dataset.key;
@@ -120,6 +122,7 @@ export function bindTouchControls({ keys, onKickStart, onKnockStart, onKickRelea
                 onKickStart();
                 return;
             }
+            if(key==='KeyR'){onSlide?.();return;}
             if(key==='KeyF'){onKnockStart?.();return;}
             if (key === 'ArrowDown' || key === 'KeyS') {
                 const now = performance.now();

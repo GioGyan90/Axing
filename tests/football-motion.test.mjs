@@ -18,7 +18,7 @@ function meshFloor(root) {
 }
 
 test('baked clips have distinct identities, finite normalized rotations and continuous adjacent frames', () => {
-    assert.equal(new Set(Object.values(FOOTBALL_CLIPS).map(c => c.uuid)).size, 5);
+    assert.equal(new Set(Object.values(FOOTBALL_CLIPS).map(c => c.uuid)).size, 6);
     for (const json of Object.values(FOOTBALL_CLIPS)) {
         const clip = THREE.AnimationClip.parse(json);
         assert.ok(clip.duration >= 1);

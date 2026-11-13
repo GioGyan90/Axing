@@ -5,6 +5,7 @@ export function updatePlayerAnimation(character, {
     dt = 1 / 60, elapsedTime = 0, movement = character.userData.velocity,
     kicking = false, kickPower = 0, kickPhase = 'charge', kickProgress = 0,
     kickTime, ballPosition, kickDirection,
+    sliding = false, slideTime = 0,
     knocked = false, getUpProgress = 0, isSprinting = false, isDribbling = false,
 } = {}) {
     const pose = character.userData.pose;
@@ -17,6 +18,10 @@ export function updatePlayerAnimation(character, {
     if (knocked) {
         pose.visualRoot.rotation.x = -Math.PI / 2 * (1 - getUpProgress);
         groundCharacter(pose);
+        return;
+    }
+    if (sliding) {
+        applyFootballMotion(pose,'slide',Math.min(1,slideTime / 0.84));
         return;
     }
     if (kicking) {

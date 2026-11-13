@@ -18,6 +18,7 @@ import {findKnockdownTarget,kickDownOpponent} from './kicking.js';
 import {goalConfettiFor} from './confetti.js';
 import {updateStunStars} from './stun-stars.js';
 import {updateSingleCombat} from './single-combat.js';
+import {requestSingleSlide,captureSlidePositions,resolveSingleSlides} from './single-slide.js';
 import {updateAIWarning} from './ai-warning.js';
 import { ensureAudioContext, playKeeperHitSound, playSixteenBitApplause } from './audio.js';
 import {
@@ -164,6 +165,7 @@ bindKeyboard({
     keys,
     onKickStart: kickStart,
     onKnockStart:()=>kickStart('person'),
+    onSlide:()=>{if(requestSingleSlide({state,player,keys,elapsedTime:clock.elapsedTime}))notify('滑铲！沿移动方向铲球或铲人');},
     onKickRelease: kickRelease,
     onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
 });
@@ -171,6 +173,7 @@ bindTouchControls({
     keys,
     onKickStart: kickStart,
     onKnockStart:()=>kickStart('person'),
+    onSlide:()=>{if(requestSingleSlide({state,player,keys,elapsedTime:clock.elapsedTime}))notify('滑铲！沿移动方向铲球或铲人');},
     onKickRelease: kickRelease,
     onKickCancel: () => cancelKickCharge(state),
     onBackDoubleTap: () => breakDribble(state, player, ball, clock.elapsedTime),
@@ -211,7 +214,7 @@ window.getMatchRecords = getMatchRecords;
 
 window.addEventListener('resize', resize);
 resize();
-startNewGame('开球！Space 自动朝球门射门，F 踢人');
+startNewGame('开球！Space 射门 · F 踢人 · R 滑铲');
 animate();
 
 function animate() {
@@ -223,6 +226,7 @@ function animate() {
 }
 
 function update(dt) {
+    const previous=captureSlidePositions({player,keeper,defender,ball});
     const combat=updateSingleCombat({dt,state,player,keeper,defender,referee,ball,elapsedTime:clock.elapsedTime,showMessage:notify,onHit:playKeeperHitSound});
     updateChargePower(state, clock.elapsedTime);
     if (state.isChargingKick && state.chargePower >= 1) {
@@ -259,16 +263,17 @@ function update(dt) {
         }, 1000);
     }
     
+    resolveSingleSlides({state,player,keeper,defender,referee,ball,elapsedTime:clock.elapsedTime,previous,showMessage:notify,onHit:playKeeperHitSound});
     updateReferee({ dt, state, referee, player, keeper, elapsedTime: clock.elapsedTime });
     updateStunStars(keeper,clock.elapsedTime,keeper.userData.knockdown,camera);
     updateStunStars(defender,clock.elapsedTime,defender.userData.knockdown,camera);
     updateStunStars(player,clock.elapsedTime,state.playerKnockdown,camera);
-    for(const actor of [keeper,defender])updateAIWarning(actor,!!actor.userData.combat?.intent||!!actor.userData.aiKick&&!actor.userData.aiKick.fired);
+    for(const actor of [keeper,defender])updateAIWarning(actor,!!actor.userData.combat?.intent||!!actor.userData.combat?.slideIntent||!!actor.userData.aiKick&&!actor.userData.aiKick.fired);
     updateAimArrow({ state, player, ball, aimArrow, getAimDirection });
     updateFootRingBar({ state, player, footRingBar, elapsedTime: clock.elapsedTime });
     updatePortraitModel(portrait, dt);
     updateKeeperBubble();
-    if(!combat.foul)checkGoal({
+    if(!combat.foul&&!state.pendingRefereeFailure&&clock.elapsedTime>=state.aiFoulUntil)checkGoal({
         state,
         ball,
         onGoal: () => {
@@ -292,6 +297,7 @@ function endGame({ outcome, reason }) {
     hideKeeperBubble();
     cancelKickCharge(state);
     state.kickAction = null;
+    state.playerSlideActive=false;for(const a of [player,keeper,defender])a.userData.slide=null;
     state.keeperSave = null;
     state.ballVelocity.set(0, 0, 0);
     

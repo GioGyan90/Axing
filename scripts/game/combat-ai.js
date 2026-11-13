@@ -2,8 +2,19 @@ import {isKnockedDown} from './knockdown.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const random=ai=>{ai.seed=(Math.imul(ai.seed,1664525)+1013904223)>>>0;return ai.seed/4294967296;};
 export function createCombatAI(seed,id){return {seed:(seed^Math.imul(id+1,2654435761))>>>0,nextThinkAt:0,nextAttackAt:0,intent:null};}
-export function clearCombatIntent(ai){if(ai)ai.intent=null;}
-export const hasCombatWarning = actor => !!actor.combat?.intent||actor.action?.kind==='knockdown'&&actor.action.source==='ai'&&!actor.action.fired;
+export function clearCombatIntent(ai){if(ai){ai.intent=null;ai.slideIntent=null;}}
+export const hasCombatWarning = actor => !!actor.combat?.intent||!!actor.combat?.slideIntent||actor.action?.kind==='knockdown'&&actor.action.source==='ai'&&!actor.action.fired;
+export function considerSlide(ai,{time,actor,owner,ball,seen=false,protectedUntil=0,teamReadyAt=0}){
+    if(ai.slideIntent)return ai.slideIntent;
+    if(time<(ai.nextSlideThinkAt||0))return null;
+    ai.nextSlideThinkAt=time+0.65;
+    const length=distance(actor,ball);
+    if(actor.role==='keeper'||actor.action||actor.slide||isKnockedDown(actor.knockdown,time)||time<actor.cooldown||time<ai.nextAttackAt||time<teamReadyAt||time<protectedUntil
+        ||owner?.team===actor.team||length<1.85||length>3.2||(ball.y??0.23)>0.62||Math.hypot(ball.vx||0,ball.vz||0)>5.5)return null;
+    if(random(ai)>(seen?0.045:0.3))return null;
+    ai.slideIntent={readyAt:time+0.3,expiresAt:time+0.9,x:ball.x+(ball.vx||0)*0.12,z:ball.z+(ball.vz||0)*0.12};
+    return ai.slideIntent;
+}
 export function considerCombat(ai,{time,actor,opponents,owner,ball,seen=false,homeGoalZ,teamReadyAt=0,protectedUntil=0,preferBall=false,aggression=1}){
     if(time<ai.nextThinkAt)return null;
     ai.nextThinkAt=time+0.45+random(ai)*0.35;
@@ -22,4 +33,4 @@ export function considerCombat(ai,{time,actor,opponents,owner,ball,seen=false,ho
     ai.intent={targetId:choice.target.id,reason:choice.reason,readyAt:time+0.22,expiresAt:time+1.2};
     return ai.intent;
 }
-export function consumeCombatAttempt(ai,time){ai.intent=null;ai.nextAttackAt=time+6+random(ai)*3;ai.nextThinkAt=time+0.6;}
+export function consumeCombatAttempt(ai,time){clearCombatIntent(ai);ai.nextAttackAt=time+6+random(ai)*3;ai.nextThinkAt=time+0.6;}

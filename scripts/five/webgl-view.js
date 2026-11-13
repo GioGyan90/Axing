@@ -38,6 +38,7 @@ export function createWebGLView(canvas,context){
                     if(a.role==='keeper')updateGoalkeeperAnimation(m,{elapsedTime:s.time,knocked:true,getUpProgress:getUp});
                     else updatePlayerAnimation(m,{dt,elapsedTime:s.time,knocked:true,getUpProgress:getUp,movement:m.userData.velocity});
                 }
+                else if(a.slide)updatePlayerAnimation(m,{dt,elapsedTime:s.time,sliding:true,slideTime:a.slide.age,movement:m.userData.velocity});
                 else if(a.action)updatePlayerAnimation(m,{dt,elapsedTime:s.time,kicking:true,kickTime:0.3+a.action.age/0.64,movement:m.userData.velocity});
                 else if(a.role==='keeper')updateGoalkeeperAnimation(m,{dt,elapsedTime:s.time,diving:!!a.dive,motionTime:a.dive?Math.min(1.6,(s.time-a.dive.started)*2):0,diveDirection:a.dive?(a.dive.side*(a.fz<0?-1:1)):1,saveHeight:s.ball.y});
                 else updatePlayerAnimation(m,{dt,elapsedTime:s.time,movement:m.userData.velocity});

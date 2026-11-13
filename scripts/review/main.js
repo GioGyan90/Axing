@@ -98,7 +98,7 @@ $('time').oninput = e => {scenario = null; playing = false; time = Number(e.targ
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 document.querySelectorAll('[data-test]').forEach(b => b.onclick = () => startScenario(b.dataset.test));
 function renderPose(dt, wallDelta = dt) {
-    player.visible = id === 'kick'; keeper.visible = id !== 'kick';
+    player.visible = id === 'kick'||id === 'slide'; keeper.visible = !player.visible;
     defender.visible = referee.visible = false;ball.visible = true;
     if (scenario) {
         const s = scenario;
@@ -143,7 +143,10 @@ function renderPose(dt, wallDelta = dt) {
         if (s.age > 2.5 && !s.saved && s.kind !== 'shot') $('test-result').textContent = '本次球未接触门将，继续飞行；没有触发远距离弹球。';
         return;
     }
-    if (id === 'kick') {
+    if(id === 'slide'){
+        ball.position.set(0,BALL_GROUND_Y,1.05);
+        updatePlayerAnimation(player,{dt,elapsedTime:time,sliding:true,slideTime:time*0.84,movement:new THREE.Vector3()});
+    } else if (id === 'kick') {
         ball.position.set(-0.16, BALL_GROUND_Y, 0.57);
         updatePlayerAnimation(player,{dt,elapsedTime:time,kicking:true,kickTime:time,
             ballPosition: time <= 0.54 ? ball.position : null,kickDirection:new THREE.Vector3(0,0,1)});
@@ -169,7 +172,7 @@ function tick(now) {
     renderPose(dt, wallDelta);
     $('time').value = time;
     $('time-value').textContent = `${time.toFixed(2)} s`;
-    $('status').textContent = `${renderer.compatibility ? 'Canvas 兼容预览' : 'WebGL 预览'}${scenario?.kind === 'defender' ? ` · 后卫 ${defender.visible ? 1 : 0} 名` : ''} · ${(id === 'kick' ? player : keeper).userData.headLoaded ? '原游戏头部已载入' : '头部载入中'} · 可暂停检查六个视角`;
+    $('status').textContent = `${renderer.compatibility ? 'Canvas 兼容预览' : 'WebGL 预览'}${scenario?.kind === 'defender' ? ` · 后卫 ${defender.visible ? 1 : 0} 名` : ''} · ${(id === 'kick'||id === 'slide' ? player : keeper).userData.headLoaded ? '原游戏头部已载入' : '头部载入中'} · 可暂停检查六个视角`;
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
 }

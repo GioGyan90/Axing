@@ -49,8 +49,21 @@ const scoop = {version: 1, name: '中路低球下蹲封堵', duration: 1.2, loop
     frame(0.45, scoopPose), frame(0.62, {...scoopPose, Spine: [3, 0, 0]}),
     frame(0.82, {...crouch, Hips: [8, 0, 0]}), frame(1.05, ready), frame(1.2, ready),
 ]};
-export const FOOTBALL_PLANS = {kick, diveLeft: dive, diveRight: mirror(dive), punch, scoop};
+// Feet first: right leg extended, left knee tucked, torso reclined and arms
+// balancing. The simulation supplies the 2.7m glide; this plan stays in place.
+const slidePose = {...ready, Hips:[-55,0,-8], Spine:[13,0,4], Head:[22,0,2],
+    RightUpLeg:[-31,0,-4], RightLeg:[8,0,0], RightFoot:[3,0,0],
+    LeftUpLeg:[-26,0,13], LeftLeg:[148,0,0], LeftFoot:[-65,0,0],
+    LeftArm:[-12,-12,-38], RightArm:[18,18,50], LeftForeArm:[0,0,-28], RightForeArm:[0,0,42]};
+const slide = {version:1,name:'右腿伸展滑铲与起身',duration:1,loop:false,hands:{left:'open',right:'open'},frames:[
+    frame(0,ready),frame(0.07,{...crouch,Hips:[-18,0,-4],Spine:[4,0,0]}),
+    frame(0.16,slidePose,[0,-0.48,0]),frame(0.55,slidePose,[0,-0.48,0]),
+    frame(0.7,{...slidePose,Hips:[-32,0,-5],RightUpLeg:[-50,0,-3],RightLeg:[95,0,0],LeftLeg:[125,0,0]},[0,-0.35,0]),
+    frame(0.86,{...crouch,Hips:[0,0,-4]},[0,-0.09,0]),frame(1,ready),
+]};
+export const FOOTBALL_PLANS = {kick, diveLeft: dive, diveRight: mirror(dive), punch, scoop, slide};
 export const MOTION_TIMING = {
+    slide: {contact:0.16,land:0.55,duration:1},
     kick: {windup: 0.3, contact: 0.52, follow: 0.64, duration: 1.3},
     diveLeft: {contact: 0.57, land: 0.9, duration: 1.6},
     diveRight: {contact: 0.57, land: 0.9, duration: 1.6},

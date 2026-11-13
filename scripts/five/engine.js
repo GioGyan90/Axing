@@ -1,7 +1,8 @@
 import {goalTarget} from '../game/goal-aim.js';
 import {KNOCKDOWN,makeKnockdown,isKnockedDown} from '../game/knockdown.js';
 import {REFEREE_VISION} from '../game/config.js';
-import {createCombatAI,considerCombat,consumeCombatAttempt,clearCombatIntent} from '../game/combat-ai.js';
+import {createCombatAI,considerCombat,considerSlide,consumeCombatAttempt,clearCombatIntent} from '../game/combat-ai.js';
+import {SLIDE,createSlide,advanceSlide,slideContact} from '../game/slide-tackle.js';
 // Renderer-independent match simulation. Metres, seconds; both renderers use
 // these exact players, ball, clock, contacts and shootout results.
 export const CAGE = Object.freeze({halfWidth:8,halfLength:12,cut:2.6,height:3.2,goalHalf:2.1,goalHeight:2,ballRadius:0.23,playerRadius:0.38});
@@ -22,16 +23,16 @@ export function createMatch({seed=12345,autoBlue=false}={}) {
     const s={seed,autoBlue,time:0,half:1,remaining:HALF_SECONDS,phase:'ready',phaseTimer:0,scores:[0,0],winner:null,
         players:[],controlledId:4,ball:{x:0,y:CAGE.ballRadius,z:0,vx:0,vy:0,vz:0,owner:null,lastTouch:null,lockUntil:0,kicker:null},
         charging:false,charge:0,chargeStart:0,shootout:null,events:[],serial:0,lastEvent:'准备开赛',
-        stats:[{passes:0,shots:0,tackles:0,saves:0,knockdowns:0,fouls:0},{passes:0,shots:0,tackles:0,saves:0,knockdowns:0,fouls:0}],paused:false,
+        stats:Array.from({length:2},()=>({passes:0,shots:0,tackles:0,saves:0,knockdowns:0,fouls:0,slides:0,slideBallHits:0})),paused:false,
         goalSerial:0,referee:{x:-9.15,z:1.5,fx:1,fz:0,vx:0,vz:0,warningUntil:0},freeKick:null,combatTeamReadyAt:[0,0],combatProtectedUntil:0};
     for(let team=0;team<2;team++) for(let slot=0;slot<5;slot++) s.players.push({id:team*5+slot,team,slot,number:slot+1,
-        role:slot===0?'keeper':'field',x:0,z:0,vx:0,vz:0,fx:0,fz:team===0?-1:1,cooldown:0,action:null,dive:null,heldSince:0,knockdown:null,
+        role:slot===0?'keeper':'field',x:0,z:0,vx:0,vz:0,fx:0,fz:team===0?-1:1,cooldown:0,action:null,dive:null,slide:null,heldSince:0,knockdown:null,
         combat:createCombatAI(seed,team*5+slot),combatSafeUntil:0});
     placeKickoff(s,0);s.phase='ready';return s;
 }
 function emit(s,text){s.lastEvent=text;s.events.push({id:++s.serial,time:s.time,text});if(s.events.length>40)s.events.shift();}
 export function startMatch(s){if(s.phase!=='ready')return false;s.phase='kickoff';s.phaseTimer=1.4;emit(s,'蓝队开球');return true;}
-function stopActions(s){s.charging=false;s.charge=0;for(const a of s.players){a.action=null;a.dive=null;a.vx=a.vz=0;clearCombatIntent(a.combat);}}
+function stopActions(s){s.charging=false;s.charge=0;for(const a of s.players){a.action=null;a.dive=null;a.slide=null;a.vx=a.vz=0;clearCombatIntent(a.combat);}}
 export function refereeSees(s,target){
     const r=s.referee,dx=target.x-r.x,dz=target.z-r.z,length=Math.hypot(dx,dz);
     return length>0.001&&length<=REFEREE_VISION.radius&&(dx*r.fx+dz*r.fz)/length>=Math.cos(REFEREE_VISION.halfAngle)-1e-9;
@@ -86,7 +87,8 @@ export function choosePassTarget(s,actor,aim){
     }).sort((a,b)=>b.score-a.score)[0]?.a;
 }
 function queueAction(s,a,kind,target,power=0.65){
-    if(a.action||s.time<a.cooldown||isKnockedDown(a.knockdown,s.time))return false;
+    if(a.action||a.slide||s.time<a.cooldown||isKnockedDown(a.knockdown,s.time))return false;
+    clearCombatIntent(a.combat);
     if(kind==='shot'&&s.phase==='playing')target=goalTarget(s.ball,{goalZ:attackDirection(s,a.team)*(CAGE.halfLength+0.5),lineZ:attackDirection(s,a.team)*CAGE.halfLength,halfWidth:CAGE.goalHalf,ballRadius:CAGE.ballRadius,preferredX:target.x});
     a.action={kind,target:{...target},power,age:0,fired:false};a.cooldown=s.time+(['tackle','knockdown'].includes(kind)?1.15:0.7);
     const direction=norm(target.x-a.x,target.z-a.z);a.fx=direction.x;a.fz=direction.z;return true;
@@ -102,9 +104,9 @@ export function beginCharge(s){
     if(s.phase==='shootout'){if(s.shootout.stage==='aim'&&s.shootout.turn===0){s.charging=true;s.chargeStart=s.time;return true;}return requestDive(s);}
     if(s.phase!=='playing')return false;
     const a=controlledPlayer(s);
-    if(isKnockedDown(a.knockdown,s.time))return false;
+    if(a.slide||isKnockedDown(a.knockdown,s.time))return false;
     if(s.ball.owner!==a.id){return queueAction(s,a,'tackle',{x:s.ball.x,z:s.ball.z});}
-    if(a.action)return false;s.charging=true;s.chargeStart=s.time;s.charge=0.18;return true;
+    if(a.action||s.time<a.cooldown)return false;s.charging=true;s.chargeStart=s.time;s.charge=0.18;return true;
 }
 export function releaseShot(s,aim){
     if(!s.charging)return false;
@@ -122,6 +124,20 @@ export function requestKnockdown(s){
     if(!target)return false;
     s.charging=false;s.charge=0;return queueAction(s,a,'knockdown',{x:target.x,z:target.z,id:target.id},0.65);
 }
+function startSlide(s,a,velocity,source='human'){
+    if(a.action||a.slide||s.time<a.cooldown||isKnockedDown(a.knockdown,s.time))return false;
+    a.slide=createSlide(s.time,velocity,{x:a.fx,z:a.fz},source);a.cooldown=s.time+SLIDE.cooldown;a.dive=null;clearCombatIntent(a.combat);
+    a.fx=a.slide.dx;a.fz=a.slide.dz;
+    if(a.id===s.controlledId){s.charging=false;s.charge=0;}
+    // A slide releases a carried ball; it is never magnetically dragged along.
+    if(s.ball.owner===a.id)Object.assign(s.ball,{owner:null,vx:0,vy:0,vz:0,kicker:a.id,lockUntil:s.time+0.15});
+    s.stats[a.team].slides++;emit(s,`${a.team===0?'蓝':'橙'}队 ${a.number} 号滑铲`);return true;
+}
+export function requestSlide(s,movement){
+    if(s.phase!=='playing'||s.paused)return false;
+    const a=controlledPlayer(s),v=movement?{x:movement.moveX||0,z:movement.moveZ||0}:{x:a.vx,z:a.vz};
+    return startSlide(s,a,v);
+}
 export function switchPlayer(s){
     if(s.phase!=='playing')return false;
     const candidates=s.players.filter(a=>a.team===0&&a.role==='field'&&!isKnockedDown(a.knockdown,s.time)).sort((a,b)=>dist(a,s.ball)-dist(b,s.ball));
@@ -131,19 +147,22 @@ function takePossession(s,a){
     s.ball.owner=a.id;s.ball.lastTouch=a.id;s.ball.kicker=null;a.heldSince=s.time;
     if(a.team===0&&a.role==='field')s.controlledId=a.id;
 }
+function knockPlayer(s,a,target,power,verb='踢倒'){
+        target.knockdown=makeKnockdown(s.time,power);target.action=null;target.dive=null;target.slide=null;target.vx=target.vz=0;target.cooldown=target.knockdown.getUpUntil;
+        target.combatSafeUntil=target.knockdown.getUpUntil+1.2;clearCombatIntent(target.combat);
+        if(target.id===s.controlledId){s.charging=false;s.charge=0;}
+        if(s.ball.owner===target.id)Object.assign(s.ball,{owner:null,vx:a.fx*2.4,vz:a.fz*2.4,vy:0.75,lockUntil:s.time+0.2,kicker:a.id});
+        const victimTeam=target.team===0?'蓝':'橙';s.stats[a.team].knockdowns++;emit(s,`${victimTeam}队 ${target.number} 号被${verb} · 眩晕 ${(target.knockdown.downUntil-s.time).toFixed(1)} 秒`);
+        if(refereeSees(s,a)){
+            s.stats[a.team].fouls++;s.referee.warningUntil=s.time+2;s.freeKick={team:target.team,x:target.x,z:target.z};
+            s.phase='foul';s.phaseTimer=1.4;stopActions(s);Object.assign(s.ball,{owner:null,vx:0,vy:0,vz:0});emit(s,`裁判吹罚${verb}犯规 · ${victimTeam}队任意球`);
+        }
+}
 function kick(s,a,action){
     if(action.kind==='knockdown'){
         const target=s.players[action.target.id];
         if(!target||target.team===a.team||isKnockedDown(target.knockdown,s.time)||dist(a,target)>KNOCKDOWN.range)return;
-        target.knockdown=makeKnockdown(s.time,action.power);target.action=null;target.dive=null;target.vx=target.vz=0;target.cooldown=target.knockdown.getUpUntil;
-        target.combatSafeUntil=target.knockdown.getUpUntil+1.2;clearCombatIntent(target.combat);
-        if(target.id===s.controlledId){s.charging=false;s.charge=0;}
-        if(s.ball.owner===target.id)Object.assign(s.ball,{owner:null,vx:a.fx*2.4,vz:a.fz*2.4,vy:0.75,lockUntil:s.time+0.2,kicker:a.id});
-        const victimTeam=target.team===0?'蓝':'橙';s.stats[a.team].knockdowns++;emit(s,`${victimTeam}队 ${target.number} 号被踢倒 · 眩晕 ${(target.knockdown.downUntil-s.time).toFixed(1)} 秒`);
-        if(refereeSees(s,a)){
-            s.stats[a.team].fouls++;s.referee.warningUntil=s.time+2;s.freeKick={team:target.team,x:target.x,z:target.z};
-            s.phase='foul';s.phaseTimer=1.4;stopActions(s);Object.assign(s.ball,{owner:null,vx:0,vy:0,vz:0});emit(s,`裁判吹罚踢人犯规 · ${victimTeam}队任意球`);
-        }return;
+        knockPlayer(s,a,target,action.power);return;
     }
     if(action.kind==='tackle'){
         if(s.time<s.ball.lockUntil)return;
@@ -190,9 +209,21 @@ function botCombat(s,a,dt,preferBall=false){
     }
     return true;
 }
+function botSlide(s,a){
+    const ai=a.combat,b=s.ball,owner=b.owner==null?null:s.players[b.owner];
+    const was=!!ai.slideIntent;
+    const intent=considerSlide(ai,{time:s.time,actor:a,owner,ball:b,seen:refereeSees(s,a),protectedUntil:s.combatProtectedUntil,teamReadyAt:s.combatTeamReadyAt[a.team]});
+    if(!intent)return false;
+    if(s.time>intent.expiresAt||owner?.team===a.team||Math.hypot(b.vx,b.vz)>7||dist(a,b)>3.6){ai.slideIntent=null;return false;}
+    if(!was)emit(s,`${a.team===0?'蓝':'橙'}队 ${a.number} 号准备滑铲 · 注意闪避`);
+    const d=norm(intent.x-a.x,intent.z-a.z);a.fx=d.x;a.fz=d.z;
+    if(s.time>=intent.readyAt&&startSlide(s,a,d,'ai')){consumeCombatAttempt(ai,s.time);s.combatTeamReadyAt[a.team]=s.time+3.2;}
+    return true;
+}
 function botField(s,a,dt){
     const direction=attackDirection(s,a.team),b=s.ball,owner=b.owner==null?null:s.players[b.owner];
     if(owner?.id===a.id){
+        a.combat.slideIntent=null;
         const held=s.time-a.heldSince,goalDistance=Math.abs(direction*CAGE.halfLength-a.z);
         const pressure=Math.min(...s.players.filter(p=>p.team!==a.team&&!isKnockedDown(p.knockdown,s.time)).map(p=>dist(a,p)));
         const target=choosePassTarget(s,a,{x:0,z:direction});
@@ -205,6 +236,7 @@ function botField(s,a,dt){
         if(!a.action)moveToward(a,{x:a.x*0.75,z:direction*(CAGE.halfLength-1)},4.8,dt);return;
     }
     if(botCombat(s,a,dt))return;
+    if(botSlide(s,a))return;
     const nearest=s.players.filter(p=>p.team===a.team&&p.role==='field'&&!isKnockedDown(p.knockdown,s.time)).sort((x,y)=>dist(x,b)-dist(y,b));
     let target;
     if(!owner||owner.team!==a.team){
@@ -236,7 +268,12 @@ function botKeeper(s,a,dt){
 function movePlayers(s,dt,input){
     const before=s.players.map(a=>({x:a.x,z:a.z}));
     for(const a of s.players){
-        if(isKnockedDown(a.knockdown,s.time)){a.vx=a.vz=0;continue;}
+        if(isKnockedDown(a.knockdown,s.time)){a.slide=null;a.vx=a.vz=0;continue;}
+        if(a.slide){
+            const slide=a.slide,old={x:a.x,z:a.z};
+            if(advanceSlide(slide,dt,old,a,p=>confineCircle(p,CAGE.playerRadius)))a.slide=null;
+            a.fx=slide.dx;a.fz=slide.dz;continue;
+        }
         if(a.role==='keeper')botKeeper(s,a,dt);
         else if(a.team===0&&a.id===s.controlledId&&!s.autoBlue){
             clearCombatIntent(a.combat);if(a.action?.source==='ai'&&!a.action.fired)a.action=null;
@@ -247,10 +284,27 @@ function movePlayers(s,dt,input){
     }
     for(let pass=0;pass<2;pass++)for(let i=0;i<10;i++)for(let j=i+1;j<10;j++){
         const a=s.players[i],b=s.players[j],length=dist(a,b),minimum=CAGE.playerRadius*2;
-        if(isKnockedDown(a.knockdown,s.time)||isKnockedDown(b.knockdown,s.time))continue;
+        if(a.slide||b.slide||isKnockedDown(a.knockdown,s.time)||isKnockedDown(b.knockdown,s.time))continue;
         if(length<minimum){const d=length>1e-5?norm(b.x-a.x,b.z-a.z):{x:1,z:0},push=(minimum-length)*0.5;a.x-=d.x*push;a.z-=d.z*push;b.x+=d.x*push;b.z+=d.z*push;}
     }
     for(const a of s.players){confineCircle(a,CAGE.playerRadius);a.vx=(a.x-before[a.id].x)/dt;a.vz=(a.z-before[a.id].z)/dt;}
+}
+function resolveSlides(s,previous){
+    for(const a of s.players){
+        const slide=a.slide;if(!slide?.sweep)continue;
+        const b=s.ball;
+        if(!slide.hitBall&&slideContact(slide,previous.ball,b,CAGE.ballRadius,{maxHeight:SLIDE.maxBallHeight})){
+            slide.hitBall=true;Object.assign(b,{owner:null,vx:slide.dx*8,vz:slide.dz*8,vy:0.8,lastTouch:a.id,kicker:a.id,lockUntil:s.time+0.42});
+            s.stats[a.team].tackles++;s.stats[a.team].slideBallHits++;s.passTargetId=null;emit(s,`${a.team===0?'蓝':'橙'}队 ${a.number} 号铲到球`);
+        }
+        for(const target of s.players){
+            if(target.team===a.team||slide.hitPlayers.includes(target.id)||isKnockedDown(target.knockdown,s.time))continue;
+            if(slideContact(slide,previous.players[target.id],target,CAGE.playerRadius)){
+                slide.hitPlayers.push(target.id);knockPlayer(s,a,target,0.45,'铲倒');
+                if(s.phase!=='playing')return;
+            }
+        }
+    }
 }
 function attachBall(s){const a=s.players[s.ball.owner];if(!a)return;Object.assign(s.ball,{x:a.x+a.fx*0.56,z:a.z+a.fz*0.56,y:a.role==='keeper'?0.9:CAGE.ballRadius,vx:0,vy:0,vz:0});}
 function keeperContact(s,a,previous){
@@ -268,7 +322,7 @@ function integrateBall(s,dt,{penalty=false}={}){
         if(s.time>b.lockUntil){
             const candidates=penalty?[s.players[s.shootout.keeperId]]:[...s.players].sort((a,c)=>dist(a,b)-dist(c,b));
             for(const a of candidates){
-                if(isKnockedDown(a.knockdown,s.time))continue;
+                if(a.slide||isKnockedDown(a.knockdown,s.time))continue;
                 if(a.id===b.kicker&&s.time<b.lockUntil+0.4)continue;
                 if(a.role==='keeper'&&keeperContact(s,a,previous)){
                     s.stats[a.team].saves++;a.dive=a.dive||{started:s.time,side:Math.sign(b.x-a.x)||1};
@@ -326,7 +380,9 @@ export function stepMatch(s,dt,input={}){
     }
     s.remaining=Math.max(0,s.remaining-dt);
     if(s.charging){s.charge=clamp((s.time-s.chargeStart)/0.65,0.18,1);if(s.charge>=1)releaseShot(s,input.aim);}
+    const previous={players:s.players.map(a=>({x:a.x,z:a.z})),ball:{...s.ball}};
     movePlayers(s,dt,input);updateActions(s,dt);if(s.phase==='playing')integrateBall(s,dt);
+    if(s.phase==='playing')resolveSlides(s,previous);
     if(s.remaining<=1e-7)endHalf(s);
 }
 
